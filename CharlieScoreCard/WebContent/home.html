@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="styles/styles.css" type="text/css" media="screen">
+  </head>
+<body>
+
+    <div id="content" class="container">
+
+      <div style="height: 10px;" background-color=""> </div>
+      
+      <h3>Charlie Analytics</h3>
+      
+      The goal of this project was to support  (or refute) the assertion that the MBTA buses serving Watertown are inadequate.
+      Specifically, the claims include, long waits, inaccurate schedules, insufficient equipment and crowded buses.</br></br>
+      This project collects realtime and static dimensional data from the MBTA developer site into a database which then feeds into a series of reports.</br>
+      <a href="http://realtime.mbta.com/portal">MBTA Developer's Portal</a>
+      
+      <h4>Analytic Views of Project</h4>
+      <ul>
+      <li>The available data includes Routes, Trips, Schedules and Stops. This data is static and doesn't generally change.</li>
+      <li>The available data also include realtime data consisting of updates from the buses every 30-40 seconds.  These updates include which Route the vehicle is on,
+      which Scheduled Trip it is making and the longitude/latitude coordinates at a specific date and time.</li>
+      <li>Associating the realtime data with the schedule data and, in some cases, layering on Google Maps, we can read and visually interpret how the bus
+      is performing against expectation for a single trip or a collection of trips such as daily or weekly averages.</li>
+      <li>We can judge performance to be reasonable from a rider perspective.</li>
+      <li>We can use performance to comment on whether schedules are achievable given a fixed number of vehicles and average/weather traffic conditions.</li>
+      <li>We can build a case for equipment and/or schedule and/or policy changes.  (An example policy change might be to keep buses a uniform distance and
+      and time apart from one another so that there are never large gaps and times between them.)</li>
+      </ul>
+     
+     
+      <h4>Outline of Insight Goals</h4>
+<ol>
+	<li>Rider Experience</li>
+		<ol type="a">
+		<li>Time between Buses</li>
+		<li>By Stop</li>
+		<li>Best/Worst</li>
+		</ol type="a">
+	<li>Schedule Variance</li>
+		<ol type="a">
+		<li>Total Route Schedule – Route Complete</li>
+		<li>Missed Trips</li>
+		<li>Variance by Stop</li>
+		</ol>
+    <li>Equipment in Service</li>
+		<ol type="a">
+		<li>Buses on Route by Time of Day</li>
+		</ol>
+</ol>
+      <p>
+
+ 
+</body>
+</html>
