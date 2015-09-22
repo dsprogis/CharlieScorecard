@@ -4213,8 +4213,8 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 }
 .navbar {
   position: relative;
-  min-height: 50px;
-  margin-bottom: 20px;
+  min-height: 10px;
+  margin-bottom: 2px;
   border: 1px solid transparent;
 }
 @media (min-width: 768px) {
@@ -4372,9 +4372,9 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   margin: 7.5px -15px;
 }
 .navbar-nav > li > a {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  line-height: 20px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  line-height: 0px;
 }
 @media (max-width: 767px) {
   .navbar-nav .open .dropdown-menu {

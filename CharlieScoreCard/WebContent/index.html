@@ -1,33 +1,107 @@
 <!DOCTYPE html>
-<html ng-app='score'>
+<html ng-app="scoreApp">
   <head>
-    <title>Where is Charlie?</title>
+    <title>Charlie Scorecard</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="custom.css">
+	<style type="text/css">
+		.selected {
+			background-color: lightgreen;
+		}
+    </style>
 	<script src="bootstrap/js/jquery-2.1.4.js"></script>
-	<script src="bootstrap/js/bootstrap.min.js"></script>
+	<script src="bootstrap/js/bootstrap.js"></script>
+	<script src="angular-1.4.6/angular.js"></script>
+	<script src="app.js"></script>
+	<script type="text/javascript">
+
+		scoreApp.controller('trackedController', function($scope,$http) {
+			$http.get("processrequests"+"?request-id=get-tracked-routes").success(function (response) {
+				$scope.trackedroutes = response;
+				$scope.selectedRow = 0;
+			});
+	        $scope.selectRestaurant = function(row) {
+	            $scope.selectedRow = row;
+			};
+		});
+	
+
+	</script>
+
   </head>
   <body>
 
 	<div class="container">
-		<img src="images/charlie-card.jpg">
+		<nav class="navbar navbar">
+		  <div class="container-fluid">
+		      <ul class="nav navbar-nav navbar-right">
+		        <li><a href="login"><span class="glyphicon glyphicon-log-in"></span> login</a></li>
+		        <li><a href="logout"><span class="glyphicon glyphicon-log-out"></span> logout</a></li> 
+		        <li><a href="register"><span class="glyphicon glyphicon-user"></span> register</a></li> 
+		      </ul>
+		  </div>
+		</nav>
+	</div>
+
+
+	<div class="container" >
+		<div style="background-color: #D8D8D8; border: 1px; display: block; height: 121px; border-style: solid; border-color: #D8D8D8; " >
+			<div style="float: left;">
+				<img src="images/charlie-card.jpg">
+			</div>
+			<div style="text-align: right; margin-right: 1cm;">
+				<font face="arial" size="7" style="font-weight: bold; color:green; line-height:60px;">Charlie<br>Scorecard</font>
+			</div>
+		</div>
 	</div>
 
 	<div class="container">
-		<ul class="nav nav-tabs">
-			<li class="active"><a href="home.html" target="myiframe">Home</a></li>
-			<li><a href="wherebus.html" target="myiframe">Explore Routes</a></li>
-			<li><a href="rider.html" target="myiframe">Rider</a></li>
-			<li><a href="schedule.html" target="myiframe">Schedule</a></li>
-			<li><a href="equipment.html" target="myiframe">Equipment</a></li>
-			<li><a href="about.html" target="myiframe">About</a></li>
-			<li><a href="settings.html" target="myiframe">Settings</a></li>
-
-		</ul>
+		<div id="custom-bootstrap-menu" class="navbar navbar-default" role="navigation">
+		    <div class="container-fluid" style="padding-left: 0px;">
+		        <div class="collapse navbar-collapse navbar-menubuilder" style="padding-left: 0px;">
+		            <ul class="nav navbar-nav navbar-left">
+		                <li><a href="scores.html" target="myiframe">Scores</a></li>
+		                <li><a href="details.html" target="myiframe">Details</a></li>
+		                <li><a href="logs.html" target="myiframe">Logs</a></li>
+		                <li><a href="realtime.html" target="myiframe">Real-time</a></li>
+		                <li><a href="browse.html" target="myiframe">Browse</a></li>
+		                <li><a href="about.html" target="myiframe">About</a></li>
+		                <li><a href="settings.html" target="myiframe">Settings</a></li>
+		            </ul>
+		        </div>
+		    </div>
+		</div>
 	</div>
 	
-	<iframe name="myiframe" src="home.html" frameborder="0" width="100%" height="2400px" scrolling="no"></iframe>
+	<div class="container">
+		<div class="clearfix">
+			<div class="col-sm-3 col-md-3 col-lg-3" style="background-color:lavender; padding-top: 8px; height:600px">
+
+				<div ng-controller="trackedController">			
+					<table class="table">
+						<tr>
+							<th>Mode</th>
+							<th>Route</th>
+							<th>Started</th>
+						</tr>
+						<tr ng-repeat="x in trackedroutes" ng-click='selectRestaurant($index)' ng-class='{selected: $index==selectedRow}' >
+							<td>{{x.mode_name}}</td>
+							<td>{{x.route_id}}</td>
+							<td>{{x.date_started}}</td>
+						</tr>			
+					</table>
+				</div>
+			
+			</div>
+			<div class="col-sm-9 col-md-9 col-lg-9" style="background-color:lavenderblush;">
+				<iframe name="myiframe" src="scores.html" frameborder="0" width="100%" height="2400px" scrolling="no"></iframe>
+			</div>
+		</div>
+	</div>
+
+
 	
   </body>
 </html>

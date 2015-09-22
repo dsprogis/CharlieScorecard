@@ -1,1 +1,3 @@
-angular.module('score', [])
+var scoreApp = angular.module("scoreApp", []);
+
+
