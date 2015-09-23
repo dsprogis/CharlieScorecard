@@ -46,5 +46,10 @@
 		<artifactId>mysql-connector-java</artifactId>
 		<version>5.1.36</version>
 	</dependency>
+	<dependency>
+		<groupId>com.stormpath.sdk</groupId>
+		<artifactId>stormpath-servlet-plugin</artifactId>
+		<version>1.0.RC4.5</version>
+	</dependency>
   </dependencies>
 </project>

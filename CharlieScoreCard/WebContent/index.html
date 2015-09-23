@@ -8,7 +8,10 @@
     <link rel="stylesheet" href="custom.css">
 	<style type="text/css">
 		.selected {
-			background-color: lightgreen;
+				border-style: solid;
+				border-color: #000000;
+				border-width: 2px;
+				background-color: #ffffff;
 		}
     </style>
 	<script src="bootstrap/js/jquery-2.1.4.js"></script>
@@ -16,43 +19,50 @@
 	<script src="angular-1.4.6/angular.js"></script>
 	<script src="app.js"></script>
 	<script type="text/javascript">
-
-		scoreApp.controller('trackedController', function($scope,$http) {
-			$http.get("processrequests"+"?request-id=get-tracked-routes").success(function (response) {
-				$scope.trackedroutes = response;
-				$scope.selectedRow = 0;
-			});
-	        $scope.selectRestaurant = function(row) {
-	            $scope.selectedRow = row;
-			};
-		});
 	
+	$( document ).ready(function() {
+		hideiFrame();
+	});
+		
+	scoreApp.controller('loginController', function($scope,$http) {
+		$http.get("welcomecontroller").success(function (response) {
+			$("#login-menu").replaceWith( response );
+		});
+	});
+
+	scoreApp.controller('trackedController', function($scope,$http) {
+		$http.get("processrequests"+"?request-id=get-tracked-routes").success(function (response) {
+			$scope.trackedroutes = response;
+			$scope.selectedRow = 0;
+		});
+        $scope.selectRestaurant = function(row) {
+            $scope.selectedRow = row;
+		};
+	});
+
+	function hideiFrame( ) {
+		$("#containeriFrame").hide();
+		$("#containerScorecards").show();
+		return true;
+	}
+	function showiFrame( ) {
+		$("#containeriFrame").show();
+		$("#containerScorecards").hide();
+		return true;
+	}
 
 	</script>
 
   </head>
   <body>
 
-	<div class="container">
-		<nav class="navbar navbar">
-		  <div class="container-fluid">
-		      <ul class="nav navbar-nav navbar-right">
-		        <li><a href="login"><span class="glyphicon glyphicon-log-in"></span> login</a></li>
-		        <li><a href="logout"><span class="glyphicon glyphicon-log-out"></span> logout</a></li> 
-		        <li><a href="register"><span class="glyphicon glyphicon-user"></span> register</a></li> 
-		      </ul>
-		  </div>
-		</nav>
-	</div>
-
-
 	<div class="container" >
-		<div style="background-color: #D8D8D8; border: 1px; display: block; height: 121px; border-style: solid; border-color: #D8D8D8; " >
+		<div style="background-color: #FFFFFF; border: 1px; display: block; height: 121px; border-style: solid; border-color: #D8D8D8; " >
 			<div style="float: left;">
 				<img src="images/charlie-card.jpg">
 			</div>
 			<div style="text-align: right; margin-right: 1cm;">
-				<font face="arial" size="7" style="font-weight: bold; color:green; line-height:60px;">Charlie<br>Scorecard</font>
+				<font face="arial" size="7" style="font-weight: bold; color:rgba(100, 100, 163, 1); line-height:60px;">Charlie<br>Scorecard</font>
 			</div>
 		</div>
 	</div>
@@ -60,33 +70,37 @@
 	<div class="container">
 		<div id="custom-bootstrap-menu" class="navbar navbar-default" role="navigation">
 		    <div class="container-fluid" style="padding-left: 0px;">
-		        <div class="collapse navbar-collapse navbar-menubuilder" style="padding-left: 0px;">
+		        <div class="collapse navbar-collapse navbar-menubuilder">
 		            <ul class="nav navbar-nav navbar-left">
-		                <li><a href="scores.html" target="myiframe">Scores</a></li>
-		                <li><a href="details.html" target="myiframe">Details</a></li>
-		                <li><a href="logs.html" target="myiframe">Logs</a></li>
-		                <li><a href="realtime.html" target="myiframe">Real-time</a></li>
-		                <li><a href="browse.html" target="myiframe">Browse</a></li>
-		                <li><a href="about.html" target="myiframe">About</a></li>
-		                <li><a href="settings.html" target="myiframe">Settings</a></li>
+		                <li><a onclick="hideiFrame()">Scorecards</a></li>
+		                <li><a onclick="showiFrame()" href="browse.html" target="myiframe">Browse</a></li>
+		                <li><a onclick="showiFrame()" href="about.html" target="myiframe">About</a></li>
+		                <li><a onclick="showiFrame()" href="settings.html" target="myiframe">Settings</a></li>
 		            </ul>
+		            <div id="login-menu" ng-controller="loginController">
+						<ul class="nav nav-pills navbar-right">
+							<li><a href="login"><span class="glyphicon glyphicon-log-in"></span> login</a></li>
+							<li><a href="logout"><span class="glyphicon glyphicon-log-out"></span> logout</a></li> 
+							<li><a href="register"><span class="glyphicon glyphicon-user"></span> register</a></li> 
+						</ul>
+					</div>
 		        </div>
 		    </div>
 		</div>
 	</div>
 	
-	<div class="container">
+	<div class="container" id="containerScorecards">
 		<div class="clearfix">
-			<div class="col-sm-3 col-md-3 col-lg-3" style="background-color:lavender; padding-top: 8px; height:600px">
+			<div class="col-sm-3 col-md-3 col-lg-3" style="background-color: rgba(200, 200, 240, 1); padding-top: 8px; height:600px;">
 
 				<div ng-controller="trackedController">			
 					<table class="table">
-						<tr>
+						<tr style="color: #000000;">
 							<th>Mode</th>
 							<th>Route</th>
 							<th>Started</th>
 						</tr>
-						<tr ng-repeat="x in trackedroutes" ng-click='selectRestaurant($index)' ng-class='{selected: $index==selectedRow}' >
+						<tr ng-repeat="x in trackedroutes" ng-click='selectRestaurant($index)' ng-class='{selected: $index==selectedRow}' style="background-color: #dddddd;">
 							<td>{{x.mode_name}}</td>
 							<td>{{x.route_id}}</td>
 							<td>{{x.date_started}}</td>
@@ -95,12 +109,25 @@
 				</div>
 			
 			</div>
-			<div class="col-sm-9 col-md-9 col-lg-9" style="background-color:lavenderblush;">
-				<iframe name="myiframe" src="scores.html" frameborder="0" width="100%" height="2400px" scrolling="no"></iframe>
+			<div class="col-sm-9 col-md-9 col-lg-9" style="height: 600px; background-color: #f0f0f0; border-style: solid; border-width: 2px; border-color: rgba(200, 200, 240, 1);">
+				<ul class="nav nav-pills navbar-right">
+					<li role="presentation" class="active"><a href="#">Summary</a></li>
+					<li role="presentation"><a href="#">Details</a></li>
+					<li role="presentation"><a href="#">Logs</a></li>
+					<li role="presentation"><a href="#">Realtime</a></li>
+				</ul>
+			<H1>ROUTE NUMBER XXXX</H1>
+
+			Detail area
 			</div>
 		</div>
 	</div>
 
+	<div class="container" id="containeriFrame">
+		<div class="clearfix" style="border-style: solid; border-width: 2px; border-color: rgba(200, 200, 240, 1);">
+			<iframe name="myiframe" src="scores.html" frameborder="0" width="100%" height="600px" scrolling="yes"></iframe>
+		</div>
+	</div>
 
 	
   </body>
