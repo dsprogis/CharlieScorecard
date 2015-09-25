@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 public class welcomecontroller extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-
 	protected Application getApplication(HttpServletRequest req) {
         return (Application)req.getAttribute(Application.class.getName());
     }
@@ -26,7 +25,7 @@ public class welcomecontroller extends HttpServlet {
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-//        Application app = getApplication(request);
+		Application app = getApplication(request);
         Account acc = getAccount(request);
 
         StringBuffer sb = new StringBuffer();

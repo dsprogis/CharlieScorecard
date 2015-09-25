@@ -13,9 +13,21 @@
 				border-width: 2px;
 				background-color: #ffffff;
 		}
+		.nav-pills.pillview > li > a {
+			font-size: 1.0em ;
+			padding: 2px 8px 2px;
+			margin-top: 8px;
+			margin-right: 8px;
+			background-color: #c8c8f0;
+		}
+		.nav-pills.pillview > li > a:hover,
+		.nav-pills.pillview > li.active > a {
+			background-color: #6464a3;
+		}
+
     </style>
+	<script src="js/jquery-2.1.4.js"></script>
 	<script src="bootstrap/js/bootstrap.js"></script>
-	<script src="bootstrap/js/jquery-2.1.4.js"></script>
 	<script src="angular-1.4.6/angular.js"></script>
 	<script src="js/app.js"></script>
 	<script type="text/javascript">
@@ -72,10 +84,10 @@
 		    <div class="container-fluid" style="padding-left: 0px;">
 		        <div class="collapse navbar-collapse navbar-menubuilder">
 		            <ul class="nav navbar-nav navbar-left">
-		                <li><a onclick="hideiFrame()">Scorecards</a></li>
-		                <li><a onclick="showiFrame()" href="browse.html" target="myiframe">Browse</a></li>
-		                <li><a onclick="showiFrame()" href="about.html" target="myiframe">About</a></li>
-		                <li><a onclick="showiFrame()" href="settings.html" target="myiframe">Settings</a></li>
+		                <li class="active"><a data-toggle="tab" onclick="hideiFrame()">Scorecards</a></li>
+		                <li><a data-toggle="tab" onclick="showiFrame()" href="browse.html" target="myiframe">Browse</a></li>
+		                <li><a data-toggle="tab" onclick="showiFrame()" href="about.html" target="myiframe">About</a></li>
+		                <li><a data-toggle="tab" onclick="showiFrame()" href="settings.html" target="myiframe">Settings</a></li>
 		            </ul>
 		            <div id="login-menu" ng-controller="loginController">
 						<ul class="nav nav-pills navbar-right">
@@ -110,14 +122,16 @@
 			
 			</div>
 			<div class="col-sm-9 col-md-9 col-lg-9" style="height: 600px; background-color: #f0f0f0; border-style: solid; border-width: 2px; border-color: rgba(200, 200, 240, 1);">
-				<ul class="nav nav-pills navbar-right">
-					<li role="presentation" class="active"><a href="#">Summary</a></li>
-					<li role="presentation"><a href="#">Details</a></li>
-					<li role="presentation"><a href="#">Logs</a></li>
-					<li role="presentation"><a href="#">Realtime</a></li>
+				<ul class="nav nav-pills navbar-right pillview">
+					<li class="active"><a data-toggle="tab" href="#">Summary</a></li>
+					<li><a data-toggle="tab" href="#">Details</a></li>
+					<li><a data-toggle="tab" href="#">Logs</a></li>
+					<li><a data-toggle="tab" href="#">Realtime</a></li>
 				</ul>
 			<H1>ROUTE NUMBER XXXX</H1>
 
+
+				
 			Detail area
 			</div>
 		</div>
