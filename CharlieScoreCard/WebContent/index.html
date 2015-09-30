@@ -42,6 +42,7 @@
 	
 	$( document ).ready(function() {
 		showScores();
+	  	$('#rootwizard').bootstrapWizard();
 	});
 
 	
@@ -65,15 +66,15 @@
 
 	function showScores( ) {
 		$("#containerScorecards").show();
-		$("#temp-scorecard").show();
 		$("#containerBrowse").hide();
 		$("#containerAbout").hide();
 		$("#containerSettings").hide();
+
+		$('#scoreView a:first').tab('show')
 		return true;
 	}
 	function showBrowse( ) {
 		$("#containerScorecards").hide();
-		$("#temp-scorecard").hide();
 		$("#containerBrowse").show();
 		$("#containerAbout").hide();
 		$("#containerSettings").hide();
@@ -81,7 +82,6 @@
 	}
 	function showAbout( ) {
 		$("#containerScorecards").hide();
-		$("#temp-scorecard").hide();
 		$("#containerBrowse").hide();
 		$("#containerAbout").show();
 		$("#containerSettings").hide();
@@ -89,7 +89,6 @@
 	}
 	function showSettings( ) {
 		$("#containerScorecards").hide();
-		$("#temp-scorecard").hide();
 		$("#containerBrowse").hide();
 		$("#containerAbout").hide();
 		$("#containerSettings").show();
@@ -137,7 +136,6 @@
 	<div class="container" id="containerScorecards">
 		<div class="clearfix">
 			<div class="col-sm-3 col-md-3 col-lg-3 charlie-page-container" style="background-color: #c8c8f0">
-
 				<div ng-controller="trackedController">			
 					<table class="table">
 						<tr style="color: #000000;">
@@ -152,24 +150,28 @@
 						</tr>			
 					</table>
 				</div>
-			
 			</div>
-			<div class="col-sm-9 col-md-9 col-lg-9" style="height: 600px; background-color: #f0f0f0; border-style: solid; border-width: 2px; border-color: rgba(200, 200, 240, 1);">
-				<ul class="nav nav-pills navbar-right pillview">
-					<li class="active"><a data-toggle="tab" href="#">Summary</a></li>
-					<li><a data-toggle="tab" href="#">Details</a></li>
-					<li><a data-toggle="tab" href="#">Logs</a></li>
-					<li><a data-toggle="tab" href="#">Realtime</a></li>
-				</ul>
 
-				<div id="route-title" style="font-size: 250%;"></div>
+			<div id="rootwizard">
+				<div class="col-sm-9 col-md-9 col-lg-9  charlie-page-container">
+					<ul id="scoreView" class="nav nav-pills navbar-right pillview">
+						<li><a data-toggle="tab" href="#tab1">Summary</a></li>
+						<li><a data-toggle="tab" href="#tab2">Details</a></li>
+						<li><a data-toggle="tab" href="#tab3">Logs</a></li>
+						<li><a data-toggle="tab" href="#tab4">Realtime</a></li>
+					</ul>
 	
-				<div id="temp-scorecard"><img width="640" src="images/scorecard.jpg"></div>
-				<div id="temp-detail"><img width="640" src="images/detail.jpg"></div>
-				<div id="temp-log"><img width="640" src="images/log.jpg"></div>
-				<div id="temp-realtime"><img width="640" src="images/realtime.jpg"></div>
-
+					<div id="route-title" style="font-size: 250%;"></div>
+					
+					<div class="tab-content">
+						<div class="tab-pane" id="tab1"><img width="640" src="images/scorecard.jpg"></div>
+						<div class="tab-pane" id="tab2"><img width="640" src="images/detail.jpg"></div>
+						<div class="tab-pane" id="tab3"><img width="640" src="images/log.jpg"></div>
+						<div class="tab-pane" id="tab4"><img width="640" src="images/realtime.jpg"></div>
+					</div>
+				</div>
 			</div>
+			
 		</div>
 	</div>
 
