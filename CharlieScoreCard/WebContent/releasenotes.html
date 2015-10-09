@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Release Notes</title>
+</head>
+<body>
+<h1>Release Notes</h1>
+
+<h2>MBTA Data Feed</h2>
+Static data, GTFS routes, stops, schedules, etc, can be picked up here:
+http://www.mbta.com/rider_tools/developers/default.asp?id=21895
+
+Dynamic data, vehicle location data, can be picked up here:
+http://realtime.mbta.com/portal
+
+Google Groups Forum:
+https://groups.google.com/forum/?fromgroups#!forum/massdotdevelopers
+
+<h2>Implementation Details:</h2>
+Prior to knowing about the GTFS data availability, I pulled static data from the realtime feed.  While it contained GIS stop locations 
+it did not contain schedule information.  Schedules could be pulled from it, but only three hours ahead of current time.  Fortunately, I 
+found the other site containing published schedules and stop locations.
+
+The GTFS data is not well-structured for everything I want to do.  For example, to display a route on Google Maps, one wants the GIS center 
+point of the route and zoom-level to frame the route in the available space.  The first step is calculating the bounding box of the route 
+which turns out to be computationally expensive because three tables must be joined, "trips", "stop_times", and "stops".  Because the join 
+includes "trips", the number of resulting rows is huge.  Then, of course, the min() and max() routines have more to sort.  Bottom line, the 
+map was taking 10 seconds to display, 99% of which is DB work.  To cut the time down, I pre-compute a table called route_bounds.  It will 
+probably be important to recompute this table when the GTFS update comes out in case bus routes change.
+
+After pre-computing the route_bounds table, I see missing data for Commuter Rails, Ferries and Shuttle Buses - I guess I will have to 
+collect that data from the live feed.  (sigh)
+
+Another issue is consistency.  There are 5 transportation modes, "Trolley", "Subway", "Commuter Rail", "Bus", "Ferry".  The Green line is 
+classified as a "Trolley", however, the description field then calls it "Rapid Transit" - why not stick with "Trolley"?!?!?  In another 
+example, the Silver Line bus routes are also called "Rapid Transit" when most Bus routes are simply called "Local Bus" or "Shuttle". 
+Several bus routes are described as "Key Bus Route (Frequent Service)" - what does that mean and how does it fit between "Local Bus" and 
+"Shuttle"?
+
+
+
+
+
+
+
+</body>
+</html>

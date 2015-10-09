@@ -12,7 +12,7 @@
     border-width: 0px 0px 4px 0px;
 }
 #custom-bootstrap-menu.navbar-default .navbar-nav>li>a {
-    background-color: rgba(200, 200, 240, 1);
+    background-color: rgba(100, 100, 163, 1);
 	color: rgba(60, 60, 60, 1);
     border-style: solid;
     border-color: #ffffff;
@@ -22,14 +22,14 @@
 }
 #custom-bootstrap-menu.navbar-default .navbar-nav>li>a:hover,
 #custom-bootstrap-menu.navbar-default .navbar-nav>li>a:focus {
-    color: rgba(0, 0, 0, 1);
-    background-color: rgba(100, 100, 163, 1);
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(200, 200, 240, 1);
 }
 #custom-bootstrap-menu.navbar-default .navbar-nav>.active>a,
 #custom-bootstrap-menu.navbar-default .navbar-nav>.active>a:hover,
 #custom-bootstrap-menu.navbar-default .navbar-nav>.active>a:focus {
-    color: rgba(255, 255, 255, 1);
-    background-color: rgba(100, 100, 163, 1);
+    color: rgba(0, 0, 0, 1);
+    background-color: rgba(200, 200, 240, 1);
 }
 #custom-bootstrap-menu.navbar-default .navbar-toggle {
     border-color: #1ba334;

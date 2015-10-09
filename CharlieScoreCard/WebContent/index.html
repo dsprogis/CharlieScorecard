@@ -4,9 +4,10 @@
     <title>Charlie Scorecard</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.css">
-    <link rel="stylesheet" href="custom.css">
+	<link rel="stylesheet" href="bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" href="custom.css" type="text/css" media="screen">
 	<style type="text/css">
+
 		.selected {
 				border-style: solid;
 				border-color: #000000;
@@ -28,8 +29,7 @@
 			border-color: #c8c8f0;
 			border-style: solid;
 			border-width: 2px;
-			padding-top: 8px;
-			height:600px;
+			padding: 8px;
 		}
 		
 
@@ -37,16 +37,19 @@
 	<script src="js/jquery-2.1.4.js"></script>
 	<script src="bootstrap/js/bootstrap.js"></script>
 	<script src="angular-1.4.6/angular.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js" type="text/javascript"></script>
 	<script src="js/app.js"></script>
+	<script src="js/browse.js"></script>
+	<script src="js/settings.js"></script>
 	<script type="text/javascript">
 	
 	$( document ).ready(function() {
 		showScores();
-	  	$('#rootwizard').bootstrapWizard();
+		$("#rootwizard").bootstrapWizard();
 	});
 
 	
-	scoreApp.controller('loginController', function($scope,$http) {
+	scoreApp.controller("loginController", function($scope,$http) {
 		$http.get("welcomecontroller").success(function (response) {
 			$("#login-menu").replaceWith( response );
 		});
@@ -78,6 +81,8 @@
 		$("#containerBrowse").show();
 		$("#containerAbout").hide();
 		$("#containerSettings").hide();
+		
+		getTransportationModes();
 		return true;
 	}
 	function showAbout( ) {
@@ -92,6 +97,8 @@
 		$("#containerBrowse").hide();
 		$("#containerAbout").hide();
 		$("#containerSettings").show();
+
+		syncSchedulerStatus();
 		return true;
 	}
 
@@ -99,9 +106,8 @@
 
   </head>
   <body>
-
 	<div class="container" >
-		<div style="background-color: #FFFFFF; border: 1px; display: block; height: 121px; border-style: solid; border-color: #D8D8D8; " >
+		<div style="background-color: #FFFFFF; display: block; height: 121px;" >
 			<div style="float: left;">
 				<img src="images/charlie-card.jpg">
 			</div>
@@ -177,7 +183,7 @@
 
 	<div class="container" id="containerBrowse">
 		<div class="clearfix charlie-page-container">
-			<iframe name="myiframe" src="browse.html" frameborder="0" width="100%" height="600px" scrolling="yes"></iframe>
+			<div ng-include="'browse.html'"></div>
 		</div>
 	</div>
 	<div class="container" id="containerAbout">
@@ -187,7 +193,7 @@
 	</div>
 	<div class="container" id="containerSettings">
 		<div class="clearfix charlie-page-container">
-			<iframe name="myiframe" src="settings.html" frameborder="0" width="100%" height="600px" scrolling="yes"></iframe>
+			<div ng-include="'settings.html'"></div>
 		</div>
 	</div>
 

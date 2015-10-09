@@ -1,11 +1,42 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-</head>
-<body>
 
-Browse
+<h3>Find a route and add it to the list of routes that are tracked for scoring.</h3>
 
-</body>
-</html>
+<div class="clearfix">
+	<p style="font-style: italic;">
+		To find a transportation route of interest, begin by selecting the MODE of transportation (Subway, Bus, etc).  The system will automatically
+		default	to the first ROUTE in the list.  You may then select a ROUTE and the system will automatically default to the first TRIP in the list.
+		A TRIP is one direction of the ROUTE, sometimes it is a variation of a ROUTE.  "0" is typically "out-bound" and "1" is typically "in-bound".
+		The system will automatically default to the first type of SERVICE on the ROUTE.  A SERVICE differentiates "Weekday" from "Saturday" and "Sunday".
+		A SERVICE also differentiates "Holidays" from "non-Holidays".  
+		
+		Clicking the "Add Route to Collection" button will add all the TRIPS & SERVICES of a given ROUTE to the short list of ROUTES begin tracked
+		by the system.  You must have Administrator privileges to add a route for tracking.
+	</p>
+	<p style="font-style: italic;">
+		Select a Mode of Transportation then Select a Route to reveal details.
+	</p>
+
+	<select id="trans-modes-select" name="trans-modes-select" onchange="if (this.selectedIndex) getRouteByType( $(this).val() );">
+		<option value="">---Select Type of Transportation---</option>
+	</select>
+	
+	<select id="routes-select" name="routes-select" onchange="if (this.selectedIndex) getDirectionsByRoute( $(this).val() );">
+		<option>Select Route</option>
+	</select>
+
+	<select id="direction-select" name="direction-select" onchange="if (this.selectedIndex) getServiceByRouteAndDirection( $(this).val() );">
+		<option>Select Direction</option>
+	</select>
+	
+	<select id="service-select" name="service-select" onchange="if (this.selectedIndex) showRouteOnMap( $(this).val() );">
+		<option>Select Service</option>
+	</select>
+	
+	<button id="add-route-to-scheduler" onclick="addRouteToScheduler( $('#trans-modes-select').val(), $('#routes-select').val() )">Add Route to Tracking Collection</button>
+
+</div>
+
+<div id="map" style="height: 600px; width: 800px; border-color: #c8c8f0; border-style: solid; border-width: 2px;">Mpa</div>
+	    		
+
+	    		
