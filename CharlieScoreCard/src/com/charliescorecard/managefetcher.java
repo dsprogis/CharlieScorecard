@@ -19,7 +19,7 @@ public class managefetcher extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 //	private static final String CONTENT_TYPE = "text/html; charset=windows-1252";
 	private static final String CONTENT_TYPE = "application/json;charset=UTF-8";
-	private Fetcher fetch = new Fetcher();
+	private FetcherPool fetch = null;
 
 	/**
      * @see HttpServlet#HttpServlet()
@@ -55,6 +55,7 @@ public class managefetcher extends HttpServlet {
 		    switch( requestID ) {
 		    case "scheduler-on":
 				System.out.println("managefetcher:scheduler-on");
+				fetch = new FetcherPool();
 				if( true == fetch.startFetching()) {
 					jsonResponse.put("fetcher-state", "run" );
 				} else {
@@ -67,6 +68,7 @@ public class managefetcher extends HttpServlet {
 				System.out.println("managefetcher:scheduler-off");
 				if( true == fetch.stopFetching()) {
 					jsonResponse.put("fetcher-state", "stop" );
+					fetch = null;
 				} else {
 					jsonResponse.put("fetcher-state", "unknown" );					
 				}
@@ -75,10 +77,14 @@ public class managefetcher extends HttpServlet {
 
 		    case "get-scheduler-runstate":
 				System.out.println("managefetcher:get-scheduler-runstate");
-				if( true == fetch.isFetching()) {
-					jsonResponse.put("fetcher-state", "run" );
-				} else {
+				if( null == fetch ) {
 					jsonResponse.put("fetcher-state", "stop" );					
+				} else {
+					if( true == fetch.isFetching()) {
+						jsonResponse.put("fetcher-state", "run" );
+					} else {
+						jsonResponse.put("fetcher-state", "stop" );					
+					}
 				}
 				out.print(jsonResponse.toString());
 				break;

@@ -62,6 +62,35 @@ public class dbaccess {
 	    return jsonRoutes;	    
 	}
 	
+	public List<String> getTrackedRouteStr() {
+		List<String> routes = new ArrayList<String>();;
+		
+	    try {
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+	      ps = connect.prepareStatement("SELECT route_id FROM mbta.tracked_routes" );
+	      rs=ps.executeQuery();
+	      
+          while( rs.next() ) {
+        	  routes.add( rs.getString("route_id") );
+          }
+	    }catch(SQLException se) {
+	        se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	        e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.out.println("MySQL Exception in dbaccess.getTrackedRoutes().");	
+	         }
+	    }
+		
+	    return routes;	    
+	}
+	
 	public String getTransportationModes() {
 		List<pojo_x_route_mode> routes = new ArrayList<pojo_x_route_mode>();;
 		
