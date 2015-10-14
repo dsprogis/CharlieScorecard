@@ -62,6 +62,11 @@ public class dbaccess {
 	    return jsonRoutes;	    
 	}
 	
+	/*
+	 * This version of getTrackedRoutes is a lot like the one above but it returns a List<String>.
+	 * I thought I could overload the method because the return signature is different but system complained so I added "Str" to end.
+	 * TODO : try to consolidate with routine above in the future.
+	 */
 	public List<String> getTrackedRouteStr() {
 		List<String> routes = new ArrayList<String>();;
 		
@@ -442,7 +447,78 @@ public class dbaccess {
 	    return true;	
 	}
 	
+	/* ******************************************************************************
+	 * Service thread pool
+	 */
+	public boolean setSetting( String key, String value ) {
+	    String query = null;
+		
+//	    System.out.println("in setSetting()");
+
+	    try {
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+	      query = "UPDATE settings SET v = ?, event_date = now() WHERE k = ?";
+//	      System.out.println( query );
+	      ps = connect.prepareStatement( query );
+	      ps.setString(1,  value );
+	      ps.setString(2,  key );
+	      ps.executeUpdate();
+
+	    }catch(SQLException se) {
+	        se.printStackTrace();
+	        return false;
+	    }catch(Exception e) {
+	        e.printStackTrace();
+	        return false;
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.out.println("MySQL Exception in setSetting().");	
+					return false;
+	         }
+	    }
+	    return true;	
+	}
+
+	public String getSetting( String key ) {
+	    String query = null;
+	    String value = null;
+		
+//	    System.out.println("in getSetting()");
+
+	    try {
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+	      query = "SELECT v FROM settings WHERE k = \"" + key + "\"";
+//	      System.out.println( query );
+	      ps = connect.prepareStatement( query );
+	      rs=ps.executeQuery();
+	      if( rs.next() ) {
+	    	  value = rs.getString("v");
+          }
+	      
+	    }catch(SQLException se) {
+	        se.printStackTrace();
+	        return null;
+	    }catch(Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.out.println("MySQL Exception in setSetting().");	
+					return null;
+	         }
+	    }
+	    return value;	
+	}
+
 	
-
-
 }

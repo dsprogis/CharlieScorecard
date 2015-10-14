@@ -9,20 +9,28 @@
 		<div id="settings-status" class="charlie-page-container" style="float: left;">status will go here</div>
 	</div>
 
-	<h4>Data Collection Scheduler</h4>
+	<h4>Data Collection</h4>
 
 	<div class="container">
-		<span style="float: left; padding: 8px;">Scheduler:</span> 
-		<ul id="scheduler-on-off" class="nav nav-pills pillview" style="float: left;">
-			<li><a data-toggle="tab" onclick="schedulerOn()">On</a></li>
-			<li><a data-toggle="tab" onclick="schedulerOff()">Off</a></li>
+		<span style="float: left; padding: 8px;">Manager:</span> 
+		<ul id="manager-on-off" class="nav nav-pills pillview" style="float: left;">
+			<li><a data-toggle="tab" onclick="managerOn()">Running</a></li>
+			<li><a data-toggle="tab" onclick="managerOff()">Stopped</a></li>
+		</ul>
+	</div>
+	
+	<div class="container">
+		<span style="float: left; padding: 8px;">Data Collection:</span> 
+		<ul id="fetchers-on-off" class="nav nav-pills pillview" style="float: left;">
+			<li><a data-toggle="tab" onclick="fetchersOn()">Running</a></li>
+			<li><a data-toggle="tab" onclick="fetchersOff()">Stopped</a></li>
 		</ul>
 	</div>
 
 <br>
 
 	<div class="container">
-		<button onclick="checkFetcherState( )">Check Fetcher State</button>
+		<button onclick="whatever( )">Whatever</button>
 	</div>
 
 

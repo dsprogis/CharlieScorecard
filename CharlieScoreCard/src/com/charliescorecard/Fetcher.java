@@ -99,6 +99,7 @@ public class Fetcher extends Thread { // implements Runnable {
 	      Class.forName( driver );
 	      connect = DriverManager.getConnection( url, user, password );
 	      Statement st = connect.createStatement();
+	      // TODO : use safer format to Update
 	      query = "UPDATE fetcher_log SET ts_last_update = now() WHERE log_id = " + _logID;
 	      st.executeUpdate( query );
 	      

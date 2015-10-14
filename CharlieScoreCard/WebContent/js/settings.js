@@ -2,57 +2,110 @@
  * Support settings.html
  */
 
-function schedulerOn() {
+function managerOn() {
 	_status = "";
-	
-	$.post("managefetcher", {"request-id": "scheduler-on"},
+	$.post("managefetcher", {"request-id": "manager-start"},
 			function( data, status ) { // on success
-				_status = data["fetcher-state"];
+				_status = data["manager-state"];
 			},'json')
 			.done (function() {
 				$('#settings-status').text("Status: " + _status );
+				syncUI_Status();
 			})
 			.fail(function() { // on failure
 				$('#settings-status').text("failed");
+				syncUI_Status();
 		});
-
 }
 
-function schedulerOff() {
+function managerOff() {
 	_status = "";
-
-	$.post("managefetcher", {"request-id": "scheduler-off"},
+	$.post("managefetcher", {"request-id": "manager-stop"},
 			function( data, status ) { // on success
-				_status = data["fetcher-state"];
+				_status = data["manager-state"];
 			},'json')
 			.done (function() {
 				$('#settings-status').text("Status: " + _status );
+				syncUI_Status();
 			})
 			.fail(function() { // on failure
 				$('#settings-status').text("failed");
+				syncUI_Status();
 		});
-
 }
 
-function syncSchedulerStatus() {
+function fetchersOn() {
 	_status = "";
-
-	$.post("managefetcher", {"request-id": "get-scheduler-runstate"},
+	$.post("managefetcher", {"request-id": "fetchers-start"},
 			function( data, status ) { // on success
-				_status = data["fetcher-state"];
+				_status = data["fetchers-state"];
 			},'json')
 			.done (function() {
 				$('#settings-status').text("Status: " + _status );
-				if( "run" == _status ) {
-					$('#scheduler-on-off li:eq(0)').addClass("active"); // Set "On" true			
+				syncUI_Status();
+			})
+			.fail(function() { // on failure
+				$('#settings-status').text("failed");
+				syncUI_Status();
+		});
+}
+
+function fetchersOff() {
+	_status = "";
+	$.post("managefetcher", {"request-id": "fetchers-stop"},
+			function( data, status ) { // on success
+				_status = data["fetchers-state"];
+			},'json')
+			.done (function() {
+				$('#settings-status').text("Status: " + _status );
+				syncUI_Status();
+			})
+			.fail(function() { // on failure
+				$('#settings-status').text("failed");
+				syncUI_Status();
+		});
+}
+
+// TODO : rename to more suitable
+function syncUI_Status() {
+	_status = "";
+	$.post("managefetcher", {"request-id": "get-manager-state"},
+			function( data, status ) { // on success
+				_status = data["manager-state"];
+			},'json')
+			.done (function() {
+				$('#settings-status').text("Status: " + _status );
+				if( "alive" == _status ) {
+					$('#manager-on-off li:eq(0)').addClass("active"); // Set "Running" active			
+					$('#manager-on-off li:eq(1)').removeClass("active"); // Set "Stopped" inactive			
 				} else {
-					$('#scheduler-on-off li:eq(1)').addClass("active"); // Set "Off" true			
+					$('#manager-on-off li:eq(0)').removeClass("active"); // Set "Running" inactive			
+					$('#manager-on-off li:eq(1)').addClass("active"); // Set "Stopped" active			
 				}
 			})
 			.fail(function() { // on failure
 				$('#settings-status').text("failed");
 		});
-
+	
+	_status = "";
+	$.post("managefetcher", {"request-id": "get-fetchers-state"},
+			function( data, status ) { // on success
+				_status = data["fetchers-state"];
+			},'json')
+			.done (function() {
+				$('#settings-status').text("Status: " + _status );
+				if( "running" == _status ) {
+					$('#fetchers-on-off li:eq(0)').addClass("active"); // Set "Running" active			
+					$('#fetchers-on-off li:eq(1)').removeClass("active"); // Set "Stopped" inactive			
+				} else {
+					$('#fetchers-on-off li:eq(0)').removeClass("active"); // Set "Running" inactive			
+					$('#fetchers-on-off li:eq(1)').addClass("active"); // Set "Stopped" active			
+				}
+			})
+			.fail(function() { // on failure
+				$('#settings-status').text("failed");
+		});	
+	
 }
 
 
