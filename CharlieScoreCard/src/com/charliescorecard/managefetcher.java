@@ -33,8 +33,42 @@ public class managefetcher extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+
+		System.out.println("In managefetcher:doGet.");
+
+	    try {
+	    	String requestID = request.getParameter("request-id");
+			System.out.println("doGet request-id recieved:" + requestID );
+			
+			response.setContentType(CONTENT_TYPE);
+		    PrintWriter out = response.getWriter();
+		    
+		    switch( requestID ) {
+		    case "get-fetcher-status":
+				System.out.println("case: managefetcher - get-fetcher-status");
+		        try {
+				    String jsonRoutes = new dbaccess().getFetcherStatus();
+				   	out.println( jsonRoutes );
+//		        	System.out.println( jsonRoutes );
+		        	System.out.println("Succeeded in: get-fetcher-status" );
+		        } catch( Exception e) {
+		        	System.out.println( e );
+		        	System.out.println("Failed in: get-fetcher-status" );
+		        }
+				break;
+				
+			default:
+				System.out.println("case: managefetcher - nothing done for request-id: " + requestID);
+				break;
+			}
+		    
+	    }
+	    catch(Exception e) {
+	      e.printStackTrace();
+			System.out.println("case: managefetcher - request-id NOT recieved.");
+	    }		
+
+	
 	}
 
 	/**
@@ -46,7 +80,7 @@ public class managefetcher extends HttpServlet {
 
 	    try {
 	    	String requestID = request.getParameter("request-id");
-//			System.out.println("managefetcher:doGet request-id recieved:" + requestID );
+//			System.out.println("managefetcher:doGet request-id received:" + requestID );
 			
 			response.setContentType(CONTENT_TYPE);
 		    PrintWriter out = response.getWriter();
@@ -54,21 +88,23 @@ public class managefetcher extends HttpServlet {
 		    
 		    switch( requestID ) {
 		    case "manager-start":
-				System.out.println("case: manager-start");
+				System.out.println("case: managefetcher - manager-start");
 				// TODO : check FetchPool still alive - when was last time thread pinged DB? 
+
+				new dbaccess().setSetting( "fetchers", "running" );
 
 				if ( null == fetch_manager ) {				// If Fetch thread exists, don't start again.
 					fetch_manager = new FetchManager();
 					fetch_manager.start();
-					System.out.println("Fetch Manager launched");
+//					System.out.println("Fetch Manager launched");
 				} else {
 					// TODO : This may or may not be the case - when did it last ping?
-					System.out.println("Fetch Manager not null and assumed running");
+//					System.out.println("Fetch Manager not null and assumed running");
 				}
 				break;
 
 		    case "manager-stop":
-				System.out.println("case: manager-stop");
+				System.out.println("case: managefetcher - manager-stop");
 				// TODO : to really see whether fetch manager is running - check thread alive
 				
 				// Stop the fetchers (no harm in stopping even if already stopped
@@ -77,14 +113,14 @@ public class managefetcher extends HttpServlet {
 				if ( null != fetch_manager ) {
 					fetch_manager.interrupt();
 					fetch_manager = null;
-					System.out.println("Fetch Manager interupted");
+//					System.out.println("Fetch Manager interupted");
 				} else {
-					System.out.println("Fetch Manager is null and assumed not alive");
+//					System.out.println("Fetch Manager is null and assumed not alive");
 				}
 				break;
 
 		    case "get-manager-state":
-				System.out.println("case: get-manager-state");
+				System.out.println("case: managefetcher - get-manager-state");
 				
 				if( null == fetch_manager ) {
 					jsonResponse.put("manager-state", "dead" );					
@@ -94,54 +130,16 @@ public class managefetcher extends HttpServlet {
 				out.print(jsonResponse.toString());
 				break;
 				
-		    case "fetchers-start":
-				System.out.println("case: fetchers-start");
-				// TODO : check FetchPool still alive - when was last time thread pinged DB? 
-				// If Fetch thread exists, don't start again.
-				if ( null != fetch_manager ) {
-					new dbaccess().setSetting( "fetchers", "running" );
-					System.out.println("Fetchers set to begin fetching");
-					jsonResponse.put("fetchers-state", "running" );
-				} else {
-					System.out.println("FetcherManager not running, can't start Fetchers");
-					jsonResponse.put("fetchers-state", "unable to manage fetchers while manager stopped" );					
-				}
-				out.print(jsonResponse.toString());
-				break;
-
-		    case "fetchers-stop":
-				System.out.println("case: fetchers-stop");
-				if( null != fetch_manager ) {
-					new dbaccess().setSetting( "fetchers", "stopped" );
-					System.out.println("Fetchers set to stop fetching");
-					jsonResponse.put("fetchers-state", "stopped" );
-				} else {
-					System.out.println("FetcherManager not running, can't stop Fetchers");
-					jsonResponse.put("fetchers-state", "unable to manage fetchers while manager stopped" );					
-				}
-				out.print(jsonResponse.toString());
-				break;
-
-		    case "get-fetchers-state":
-				System.out.println("case: get-fetchers-state");
-				String runstate = new dbaccess().getSetting( "fetchers" );
-				if( runstate.equals("running") ) {
-					jsonResponse.put("fetchers-state", "running" );					
-				} else {
-					jsonResponse.put("fetchers-state", "stopped" );					
-				}
-				out.print(jsonResponse.toString());
-				break;
 
 		    default:
-				System.out.println("managefetcher:Nothing done for request-id: " + requestID);
+				System.out.println("case: managefetcher - nothing done for request-id: " + requestID);
 				break;
 			}
 		    
 	    }
 	    catch(Exception e) {
 	      e.printStackTrace();
-			System.out.println("managefetcher:request-id NOT recieved.");
+			System.out.println("case: managefetcher - request-id NOT recieved.");
 	    }	
 		
 	}

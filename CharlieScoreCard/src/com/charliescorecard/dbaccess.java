@@ -423,7 +423,8 @@ public class dbaccess {
 	      Class.forName( driver );
 	      connect = DriverManager.getConnection( url, user, password );
 	      Statement st = connect.createStatement();
-	      query = "INSERT INTO tracked_routes (mode_name, route_id) VALUES ( \"" + modeID + "\", \"" + routeID + "\" )";
+	      query = "INSERT INTO tracked_routes (mode_name, route_id) " +
+	    		  "VALUES ( (SELECT route_mode from x_route_mode WHERE route_type = \"" + modeID + "\"), \"" + routeID + "\" )";
 	      st.executeUpdate( query );
 	      
 	      System.out.println( query );
@@ -446,6 +447,52 @@ public class dbaccess {
 	    }
 	    return true;	
 	}
+	
+	public String getFetcherStatus() {
+		List<pojoFetcherLog> fetchers = new ArrayList<pojoFetcherLog>();;
+		
+	    try {
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+//	      ps = connect.prepareStatement("SELECT * FROM mbta.fetcher_log" );
+	      ps = connect.prepareStatement("SELECT fetcher_log.route_id, fetcher_log.ts_started, fetcher_log.ts_last_update, fetcher_log.message " +
+	    		  "FROM fetcher_log " + 
+	    		  "INNER JOIN " +
+	    		  	"(SELECT route_id, MAX(ts_last_update) as ts " +
+	    		  	"FROM fetcher_log " +
+	    		  	"GROUP BY route_id) maxt " +
+	    		  "ON (fetcher_log.route_id = maxt.route_id AND fetcher_log.ts_last_update = maxt.ts);" );
+	      rs=ps.executeQuery();
+	      
+          while( rs.next() ) {
+        	  fetchers.add( new pojoFetcherLog( rs.getString("route_id"), rs.getString("ts_started"), rs.getString("ts_last_update"), rs.getString("message") ) );
+          }
+	    }catch(SQLException se) {
+	        se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	        e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.out.println("MySQL Exception in dbaccess.getFetcherStatus().");	
+	         }
+	    }
+		
+	    ObjectWriter ow = new ObjectMapper().writer(); //.withDefaultPrettyPrinter();
+    	String jsonRoutes = null;
+	    try {
+	    	jsonRoutes = ow.writeValueAsString( fetchers );
+	    }catch(JsonProcessingException e){
+	        e.printStackTrace();
+	    }
+	    return jsonRoutes;	    
+	}
+	
+
+	
 	
 	/* ******************************************************************************
 	 * Service thread pool

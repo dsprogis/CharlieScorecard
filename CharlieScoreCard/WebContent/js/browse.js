@@ -163,25 +163,9 @@ function showRouteOnMap( shape_id ) {
 
 function addRouteToScheduler( modeID, routeID ) {
 
-
 	$.post('processrequests', {"request-id": "add-route-to-scheduler", "mode-id": modeID, "route-id": routeID }, function( response ) { // on success
 		console.log( "Added to Scheduler, Route = " + routeID );
 	});
 
-/*
-	// This is the AJAX version
-	$.ajax({
-		  type:    "POST",
-		  url:     "processrequests",
-		  data:    {"request-id": "post_z_shape_used", "shape-id": shape_id },
-		  success: function(data) {
-			  console.log( "shape saved" );
-		  },
-		  error:   function(jqXHR, textStatus, errorThrown) {
-		        alert("Error, status = " + textStatus + ", " +
-		              "error thrown: " + errorThrown
-		        );
-		  }
-		});
-*/	
+
 }

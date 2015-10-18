@@ -1,5 +1,18 @@
 package com.charliescorecard;
 
+import com.google.gson.*;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class Fetcher extends Thread { // implements Runnable {
+	public static final int MYSQL_DUPLICATE_PK = 1062;
     private Connection connect = null;
 	private PreparedStatement ps = null;
 	private ResultSet rs = null;
@@ -19,6 +33,9 @@ public class Fetcher extends Thread { // implements Runnable {
 	private String _RouteID;
 	private int _logID;
 	private boolean _bRunning = false;
+	private String _jsonFeed = null;
+	private BigInteger bigIntLast;
+	private boolean _bExtendedSleep = false;
 	
 	public Fetcher( String RouteID ) {
 		_RouteID = RouteID;
@@ -26,25 +43,95 @@ public class Fetcher extends Thread { // implements Runnable {
 	}
 	
     public void run(){
+    	
+    	// RUN ONCE WHEN STARTED
     	_bRunning = true;
     	logNewFetcher( _RouteID );
+		bigIntLast = new BigInteger( "0" );
+    	
+    	// MAIN LOOP - RUN REPEATEDLY UNTIL INTERUPTED OR _bRunning STATE CHANGE
     	while( true == _bRunning )
     	{
-    		System.out.println( "Fetcher running, Route ID = " + _RouteID );
+    		System.out.println( "__ __ Fetcher running, Route ID = " + _RouteID + ", _LogID = " + _logID );
     		try {
-    			sleep(5000);
-    		} catch (InterruptedException ex) {
-    			// TODO : handle interrupt
+
+    			if( true == _bExtendedSleep ) {
+        			sleep(60000);	// Default to 60000 = 60 seconds
+    	        	_bExtendedSleep = false;
+    			}
+    // Fetch the data for this route
+    			String fetchQuery = "http://realtime.mbta.com/developer/api/v2/vehiclesbyroute?api_key=k_wFTD1RnkidAgHIvkbdgw&route=" + _RouteID + "&format=json";
+    			System.out.println( fetchQuery );
+    			_jsonFeed = readUrl2( fetchQuery );
+// 				System.out.println( "__ __ " + _jsonFeed );
+    			
+ 	// Objectify the JSON
+			    Gson gson = new Gson();
+			    feedRoute route = gson.fromJson( _jsonFeed, feedRoute.class );
+
+	// Hash an ID and Revision (there will only every be one version so no collisions)
+			    MessageDigest m = MessageDigest.getInstance("MD5");
+			    m.reset();
+			    m.update( _jsonFeed.getBytes() );
+			    byte[] digest = m.digest();
+			    BigInteger bigInt = new BigInteger( 1, digest );
+			    String hashtext = bigInt.toString(16);
+			    while(hashtext.length() < 32 ){		// Pad to full 32 chars.
+			      hashtext = "0"+hashtext;
+			    }
+		        hashtext = "1-"+hashtext;
+//				System.out.println( "__ __ " + hashtext );
+
+				route.setId( hashtext );
+			    route.setRevision( hashtext );
+	    
+	//	If this fetch is not the same as the last, then add the Bus Status update to the database    
+			    if( 0 != bigInt.compareTo( bigIntLast ) ) {
+			    	addFeedData( route );
+					bigIntLast = bigInt;
+			    }
+			    else {
+					System.out.println("__ __ Fetch skipped because it is a repeat");			    	
+			    }
+
+	        	logUpdateFetcher( "Fetching..." );
+    			sleep(30000);	// Default to 30000 = 30 seconds
+    			
+    		} catch (FileNotFoundException ioEx) {
+    			
+    	    	System.out.println( "__ __ Fetch data not returned for, Route ID = " + _RouteID + " *** Assume feed is down ***" );
+	        	logUpdateFetcher( "Fetching, but feed appears down for route=" + _RouteID );
+	        	// Don't stop, but slow down the loop
+	        	_bExtendedSleep = true; 
+	        	
+    	    } catch (IOException ioEx) {
+    	    	
+    	    	System.err.println( "__ __ ***** Failure to fetch data *****, Route ID = " + _RouteID + "\n" );
+    	    	String eMsg = ioEx.getMessage();
+                if( eMsg.contains("401 for URL") ) {
+                    System.err.println( "__ __ ***** Access Key is no longer authorized *****\n" );
+        	    	logUpdateFetcher( "Fetch stopped, MBTA Access Key is no longer authorized\n" );
+                } else {
+                    System.err.println( "__ __ " + eMsg + "\n" );
+                }
+    	    	System.out.println( "__ __ Fetcher stopping, Route ID = " + _RouteID );
+    			_bRunning = false;
+
+    	    } catch (InterruptedException ex) {
+    	    	
+    	    	System.out.println( "__ __ Fetcher stopping, Route ID = " + _RouteID  + ", _LogID = " + _logID );
+    	    	logUpdateFetcher( "Fetch interupted, probably by user" );
+    			_bRunning = false;
+    			
+    		} catch (Exception ex) {
+    			
+    			// TODO : handle exception
+    			
     		}
-        	logUpdateFetcher( );
+    		
     	}
     }
-    
-    public void finish(){
-    	System.out.println( "Fetcher stoping, Route ID = " + _RouteID );
-    	logUpdateFetcher( );
-    	_bRunning = false;
-    }
+
     
     /************************************************************************************
      * logNewFetcher creates a log entry with a start date.
@@ -53,7 +140,7 @@ public class Fetcher extends Thread { // implements Runnable {
 	private int logNewFetcher( String routeID ) {
 	    String query = null;
 		
-	    System.out.println("in logNewFetcher()");
+	    System.out.println("__ __ In logNewFetcher()");
 
 	    try {
 	      Class.forName( driver );
@@ -61,14 +148,15 @@ public class Fetcher extends Thread { // implements Runnable {
 	      Statement st = connect.createStatement();
 	      query = "INSERT INTO fetcher_log (route_id, ts_started, ts_last_update) VALUES ( \"" + routeID + "\", now(), now() )";
 	      st.executeUpdate( query );
-	      
+
+	      // Get the Unique Log entry so we can keep it up-to-date with this thread
 	      ps = connect.prepareStatement("SELECT LAST_INSERT_ID()" );
 	      rs=ps.executeQuery();
 	      if (rs.next()) {
 	    	  _logID = rs.getInt( "last_insert_id()" );            // This promises to be thread-safe because it is scoped to DB connection
 	      }
 
-	      System.out.println( query );
+//	      System.out.println( "__ __ " + query );
 
 	    }catch(SQLException se) {
 	        se.printStackTrace();
@@ -82,7 +170,7 @@ public class Fetcher extends Thread { // implements Runnable {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in logNewFetcher().");	
+					System.out.println("__ __ MySQL Exception in logNewFetcher().");	
 					return 0;
 	         }
 	    }
@@ -90,20 +178,20 @@ public class Fetcher extends Thread { // implements Runnable {
 	    return 0;	
 	}
 
-	private boolean logUpdateFetcher( ) {
+	private boolean logUpdateFetcher( String message ) {
 	    String query = null;
 		
-	    System.out.println("in logUpdateFetcher()");
+//	    System.out.println("__ __ In logUpdateFetcher()");
 
 	    try {
 	      Class.forName( driver );
 	      connect = DriverManager.getConnection( url, user, password );
 	      Statement st = connect.createStatement();
 	      // TODO : use safer format to Update
-	      query = "UPDATE fetcher_log SET ts_last_update = now() WHERE log_id = " + _logID;
+	      query = "UPDATE fetcher_log SET ts_last_update = now(), message = \"" + message + "\" WHERE log_id = " + _logID;
 	      st.executeUpdate( query );
 	      
-	      System.out.println( query );
+//	      System.out.println( "__ __ " + query );
 
 	    }catch(SQLException se) {
 	        se.printStackTrace();
@@ -117,11 +205,123 @@ public class Fetcher extends Thread { // implements Runnable {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in logUpdateFetcher().");	
+					System.out.println("__ __ MySQL Exception in logUpdateFetcher().");	
 					return false;
 	         }
 	    }
 	    return true;	
 	}
 
+	private static String readUrl(String urlString) throws Exception {
+		//TODO update this code with better stream management
+	    BufferedReader reader = null;
+        StringBuffer buffer = null;
+	    try {
+
+	    	URL url = new URL(urlString);
+	        reader = new BufferedReader(new InputStreamReader(url.openStream()));
+	        buffer = new StringBuffer();
+	        int read;
+	        char[] chars = new char[5000];
+	        while ((read = reader.read(chars)) != -1)
+	            buffer.append(chars, 0, read); 
+	        return buffer.toString();
+
+	    } catch (IOException ioEx) {
+	    	// Display exception
+	    	String eMsg = ioEx.getMessage();
+            System.err.println( "__ __ IOException encountered while trying to read URL:\n__ __ " + eMsg );
+            System.err.println( "__ __ Return Results were: " + buffer );
+	    	throw ioEx;
+	    } finally {
+	        if (reader != null)
+	            reader.close();
+	    }
+	}
+	
+	private static String readUrl2(String urlString) throws Exception {
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buf = new byte[8192];
+
+		try {
+
+			URL url = new URL( urlString );
+			URLConnection con = url.openConnection();
+			InputStream in = con.getInputStream();
+			String encoding = con.getContentEncoding();
+			encoding = encoding == null ? "UTF-8" : encoding;
+			int len = 0;
+			while ((len = in.read(buf)) != -1) {
+			    baos.write(buf, 0, len);
+			}
+			String body = new String(baos.toByteArray(), encoding);
+			System.out.println(body);
+			return body;
+
+	    } catch (FileNotFoundException  ioEx) {
+	    	// Display exception
+	    	String eMsg = ioEx.getMessage();
+            System.err.println( "__ __ File not found while trying to read URL: " + eMsg );
+	    	throw ioEx;
+	    } catch (EOFException  ioEx) {
+	    	// Display exception
+	    	String eMsg = ioEx.getMessage();
+            System.err.println( "__ __ End of file reached while trying to read URL: " + eMsg );
+	    	throw ioEx;
+	    } catch (IOException ioEx) {
+	    	// Display exception
+	    	String eMsg = ioEx.getMessage();
+            System.err.println( "__ __ IOException encountered while trying to read URL: " + eMsg );
+	    	throw ioEx;
+	    }
+	}
+	
+	private int addFeedData( feedRoute route ) throws Exception {
+	    int status = 0;
+
+//	    System.out.println("__ __ In Fetcher:addFeedData()");
+
+	    try {
+			Class.forName( driver );
+			connect = DriverManager.getConnection( url, user, password );
+
+			ps = connect.prepareStatement("insert into raw_location (route_id, trip_id, trip_name, vehicle_id, vehicle_lat, vehicle_lon, vehicle_timestamp) values (?, ?, ?, ?, ?, ?, ?)" );
+
+	      // Parameters start with 1
+			for ( feedDirection direction : route.direction ) {
+				for ( feedTrip trip : direction.trip ) {
+					ps.setString( 1, route.route_id );
+					ps.setString( 2, trip.trip_id );
+					ps.setString( 3, trip.trip_name );
+					ps.setString( 4, trip.vehicle.vehicle_id );
+					ps.setString( 5, trip.vehicle.vehicle_lat );
+					ps.setString( 6, trip.vehicle.vehicle_lon );
+					ps.setString( 7, trip.vehicle.vehicle_timestamp );
+					try{
+						System.out.println( "__ __ " + ps );
+						status = ps.executeUpdate();
+						System.out.println( "__ __ " + status );
+					} catch( SQLException e ){
+	    	    	    if(e.getErrorCode() == MYSQL_DUPLICATE_PK ){
+	    					System.out.println("__ __ MySQL Duplicate Trip Entry.");	
+	    	    	    }
+	    	    	}
+				}
+			}
+
+	    } catch (Exception e) {
+	      throw e;
+	    } finally {
+	    	try {
+	    		if (connect != null) {
+	    			connect.close();
+	    		}
+	    	} catch (Exception e) {
+	    		System.out.println("__ __ MySQL Exception.");	
+	    	}
+	    }
+	    return status;
+	}
+	
   }

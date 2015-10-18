@@ -12,26 +12,50 @@
 	<h4>Data Collection</h4>
 
 	<div class="container">
-		<span style="float: left; padding: 8px;">Manager:</span> 
+		<span style="float: left; padding: 8px;">Interval between data fetches (seconds):</span> 
+		<div class="charlie-page-container" style="float: left;">NN Seconds</div>
+		<ul class="nav nav-pills pillview" style="float: left; padding-left: 8px;">
+			<li class="active"><a onclick="updateFetchInterval()">Update Interval</a></li>
+		</ul>
+	</div>
+	
+	<div class="container">
+		<span style="float: left; padding: 8px;">Interval between thread checks which confirm threads running and add/remove routes:</span> 
+		<div class="charlie-page-container" style="float: left;">NN Minutes</div>
+		<ul class="nav nav-pills pillview" style="float: left; padding-left: 8px;">
+			<li class="active"><a onclick="updateThreadCheckInterval()">Update Interval</a></li>
+		</ul>
+	</div>
+	
+	<div class="container">
+		<span style="float: left; padding: 8px;">Data Collection:</span> 
 		<ul id="manager-on-off" class="nav nav-pills pillview" style="float: left;">
 			<li><a data-toggle="tab" onclick="managerOn()">Running</a></li>
 			<li><a data-toggle="tab" onclick="managerOff()">Stopped</a></li>
 		</ul>
 	</div>
 	
-	<div class="container">
-		<span style="float: left; padding: 8px;">Data Collection:</span> 
-		<ul id="fetchers-on-off" class="nav nav-pills pillview" style="float: left;">
-			<li><a data-toggle="tab" onclick="fetchersOn()">Running</a></li>
-			<li><a data-toggle="tab" onclick="fetchersOff()">Stopped</a></li>
-		</ul>
+
+	<div class="col-sm-9 col-md-9 col-lg-9">
+		<div ng-controller="fetcherController">			
+			<table class="table simple-table-container ">
+				<tr style="color: #000000;">
+					<th>Route</th>
+					<th>Started</th>
+					<th>Updated</th>
+					<th>Message</th>
+				</tr>
+				<tr ng-repeat="fr in fetchingroutes" style="font-size: 10px;">
+					<td style="padding: 2px; margin: 0px; height: 0px; line-height: 14px; padding-left: 12px;">{{fr.route_id}}</td>
+					<td style="padding: 2px; margin: 0px; height: 0px; line-height: 14px;">{{fr.ts_started}}</td>
+					<td style="padding: 2px; margin: 0px; height: 0px; line-height: 14px;">{{fr.ts_last_update}}</td>
+					<td style="padding: 2px; margin: 0px; height: 0px; line-height: 14px;">{{fr.message}}</td>
+				</tr>			
+			</table>
+			<button id="btUpdateTableFetchLog" ng-click="updateTableFetchLog()">Refresh Routes Table</button>
+		</div>
 	</div>
-
-<br>
-
-	<div class="container">
-		<button onclick="whatever( )">Whatever</button>
-	</div>
-
+	
+	
 
 </div>

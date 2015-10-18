@@ -77,34 +77,17 @@ function syncUI_Status() {
 				$('#settings-status').text("Status: " + _status );
 				if( "alive" == _status ) {
 					$('#manager-on-off li:eq(0)').addClass("active"); // Set "Running" active			
-					$('#manager-on-off li:eq(1)').removeClass("active"); // Set "Stopped" inactive			
+					$('#manager-on-off li:eq(1)').removeClass("active"); // Set "Stopped" inactive
 				} else {
 					$('#manager-on-off li:eq(0)').removeClass("active"); // Set "Running" inactive			
-					$('#manager-on-off li:eq(1)').addClass("active"); // Set "Stopped" active			
+					$('#manager-on-off li:eq(1)').addClass("active"); // Set "Stopped" active	
 				}
+//				updateTableFetchLog();								// Update the fetcher log table		
+				$("#btUpdateTableFetchLog").click();
 			})
 			.fail(function() { // on failure
 				$('#settings-status').text("failed");
 		});
-	
-	_status = "";
-	$.post("managefetcher", {"request-id": "get-fetchers-state"},
-			function( data, status ) { // on success
-				_status = data["fetchers-state"];
-			},'json')
-			.done (function() {
-				$('#settings-status').text("Status: " + _status );
-				if( "running" == _status ) {
-					$('#fetchers-on-off li:eq(0)').addClass("active"); // Set "Running" active			
-					$('#fetchers-on-off li:eq(1)').removeClass("active"); // Set "Stopped" inactive			
-				} else {
-					$('#fetchers-on-off li:eq(0)').removeClass("active"); // Set "Running" inactive			
-					$('#fetchers-on-off li:eq(1)').addClass("active"); // Set "Stopped" active			
-				}
-			})
-			.fail(function() { // on failure
-				$('#settings-status').text("failed");
-		});	
 	
 }
 

@@ -31,6 +31,13 @@
 			border-width: 2px;
 			padding: 8px;
 		}
+		.simple-table-container {
+			border-color: #c8c8f0;
+			border-style: solid;
+			border-width: 1px;
+			background-color: #f0f0f0;
+		}
+
 		
 
     </style>
@@ -65,6 +72,19 @@
             $scope.selectedRow = row;
             $("#route-title").text(mode + " " + route);
 		};
+	});
+
+	scoreApp.controller('fetcherController', function($scope,$http) {
+		$http.get("managefetcher"+"?request-id=get-fetcher-status").success(function (response) {
+			$scope.fetchingroutes = response;
+		});
+		$scope.updateTableFetchLog = function ( ) {
+//			alert("updateFetchLogTable");
+			$http.get("managefetcher"+"?request-id=get-fetcher-status").success(function (response) {
+				$scope.fetchingroutes = response;
+				$scope.tableParams.reload();
+			});
+		}
 	});
 
 	function showScores( ) {
