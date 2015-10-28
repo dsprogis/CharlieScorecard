@@ -2,13 +2,11 @@ package com.charliescorecard;
 
 import com.google.gson.*;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
@@ -87,7 +85,8 @@ public class Fetcher extends Thread { // implements Runnable {
 	    
 	//	If this fetch is not the same as the last, then add the Bus Status update to the database    
 			    if( 0 != bigInt.compareTo( bigIntLast ) ) {
-			    	addFeedData( route );
+			    	addFeedData( route );						// Add to running log
+			    	updateCurrentLocations( route );			// Update current locations on route
 					bigIntLast = bigInt;
 			    }
 			    else {
@@ -212,32 +211,6 @@ public class Fetcher extends Thread { // implements Runnable {
 	    return true;	
 	}
 
-	private static String readUrl(String urlString) throws Exception {
-		//TODO update this code with better stream management
-	    BufferedReader reader = null;
-        StringBuffer buffer = null;
-	    try {
-
-	    	URL url = new URL(urlString);
-	        reader = new BufferedReader(new InputStreamReader(url.openStream()));
-	        buffer = new StringBuffer();
-	        int read;
-	        char[] chars = new char[5000];
-	        while ((read = reader.read(chars)) != -1)
-	            buffer.append(chars, 0, read); 
-	        return buffer.toString();
-
-	    } catch (IOException ioEx) {
-	    	// Display exception
-	    	String eMsg = ioEx.getMessage();
-            System.err.println( "__ __ IOException encountered while trying to read URL:\n__ __ " + eMsg );
-            System.err.println( "__ __ Return Results were: " + buffer );
-	    	throw ioEx;
-	    } finally {
-	        if (reader != null)
-	            reader.close();
-	    }
-	}
 	
 	private static String readUrl2(String urlString) throws Exception {
 
@@ -301,15 +274,14 @@ public class Fetcher extends Thread { // implements Runnable {
 					try{
 						System.out.println( "__ __ " + ps );
 						status = ps.executeUpdate();
-						System.out.println( "__ __ " + status );
+//						System.out.println( "__ __ " + status );
 					} catch( SQLException e ){
 	    	    	    if(e.getErrorCode() == MYSQL_DUPLICATE_PK ){
-	    					System.out.println("__ __ MySQL Duplicate Trip Entry.");	
+	    					System.err.println("__ __ MySQL Duplicate feed entry into raw_location.");	
 	    	    	    }
 	    	    	}
 				}
 			}
-
 	    } catch (Exception e) {
 	      throw e;
 	    } finally {
@@ -323,5 +295,54 @@ public class Fetcher extends Thread { // implements Runnable {
 	    }
 	    return status;
 	}
+	
+	private int updateCurrentLocations( feedRoute route ) throws Exception {
+	    int status = 0;
+
+	    try {
+			Class.forName( driver );
+			connect = DriverManager.getConnection( url, user, password );
+			
+			// Delete existing current trips where route_id = route
+			ps = connect.prepareStatement("delete from current_location where route_id = \"" + route.route_id +"\"" );
+			ps.executeUpdate();
+
+			// Add existing current trips where route_id = route
+			ps = connect.prepareStatement("insert into current_location (route_id, trip_id, trip_name, vehicle_id, vehicle_lat, vehicle_lon, vehicle_timestamp, shape_id) VALUES (?, ?, ?, ?, ?, ?, ?, (select shape_id from t_trips where trip_id = ?))" );
+			for ( feedDirection direction : route.direction ) {
+				for ( feedTrip trip : direction.trip ) {
+					ps.setString( 1, route.route_id );
+					ps.setString( 2, trip.trip_id );
+					ps.setString( 3, trip.trip_name );
+					ps.setString( 4, trip.vehicle.vehicle_id );
+					ps.setString( 5, trip.vehicle.vehicle_lat );
+					ps.setString( 6, trip.vehicle.vehicle_lon );
+					ps.setString( 7, trip.vehicle.vehicle_timestamp );
+					ps.setString( 8, trip.trip_id );
+					try{
+//						System.out.println( "__ __ " + ps );
+						status = ps.executeUpdate();
+					} catch( SQLException e ){
+	    	    	    if(e.getErrorCode() == MYSQL_DUPLICATE_PK ){
+	    					System.err.println("__ __ MySQL Duplicate feed entry into current_location.");	
+	    	    	    }
+	    	    	}
+				}
+			}
+	    } catch (Exception e) {
+	      throw e;
+	    } finally {
+	    	try {
+	    		if (connect != null) {
+	    			connect.close();
+	    		}
+	    	} catch (Exception e) {
+	    		System.out.println("__ __ MySQL Exception.");	
+	    	}
+	    }
+	    return status;
+	}
+	
+	
 	
   }

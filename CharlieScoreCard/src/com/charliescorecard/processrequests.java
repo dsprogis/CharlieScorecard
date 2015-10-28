@@ -156,6 +156,33 @@ public class processrequests extends HttpServlet {
 		        }
 				break;
 				
+		    case "get-current-trips":
+//				System.out.println("get-current-trips");
+				try {
+			    	String routeID = request.getParameter("route-id");
+				    String jsonTrips = new dbaccess().getCurrentTrips( routeID );
+				   	out.println( jsonTrips );
+//		        	System.out.println( jsonTrips );
+//		        	System.out.println("Succeeded in: get-current-trips" );
+		        } catch( Exception e) {
+		        	System.out.println( e );
+		        	System.out.println("Failed in: get-current-trips" );
+		        }
+				break;
+				
+		    case "get-heatmap-data":
+				System.out.println("get-heatmap-data");
+				try {
+				    String jsonHeat = new dbaccess().getHeatmapData(  );
+				   	out.println( jsonHeat );
+		        	System.out.println( jsonHeat );
+		        	System.out.println("Succeeded in: get-heatmap-data" );
+		        } catch( Exception e) {
+		        	System.out.println( e );
+		        	System.out.println("Failed in: get-heatmap-data" );
+		        }
+				break;
+				
 			default:
 				System.out.println("Nothing done for request-id: " + requestID);
 				break;

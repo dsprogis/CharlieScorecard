@@ -38,9 +38,25 @@
 			background-color: #f0f0f0;
 		}
 
-		
+
+		rect.bordered {
+			stroke: #E6E6E6;
+			stroke-width:2px;   
+		}
+		text.mono {
+			font-size: 9pt;
+			font-family: Consolas, courier;
+			fill: #aaa;
+		}
+		text.axis-workweek {
+			fill: #000;
+		}
+		text.axis-worktime {
+			fill: #000;
+		}
 
     </style>
+	<script src="http://d3js.org/d3.v3.js"></script>
 	<script src="js/jquery-2.1.4.js"></script>
 	<script src="bootstrap/js/bootstrap.js"></script>
 	<script src="angular-1.4.6/angular.js"></script>
@@ -48,6 +64,8 @@
 	<script src="js/app.js"></script>
 	<script src="js/browse.js"></script>
 	<script src="js/settings.js"></script>
+	<script src="js/score_trips.js"></script>
+	<script src="js/score_realtime.js"></script>
 	<script type="text/javascript">
 	
 	$( document ).ready(function() {
@@ -70,7 +88,40 @@
 		});
         $scope.selectRoute = function(row, mode, route) {
             $scope.selectedRow = row;
-            $("#route-title").text(mode + " " + route);
+            // Set Mode and Route to newly clicked selection in left-nav
+            $("#title-mode").text( mode + ": ");
+            $("#title-route").text(route);
+            // Update ViewController with new route
+//			alert( $("#scoreView .active").text() );
+//			alert( $("#rootwizard a.current").attr( "href" ) );
+//			alert( $("#rootwizard .current").attr( "href" ) );
+//			alert( $("#rootwizard a.current").prop( "href" ) );
+//			alert( $("#rootwizard .current").prop( "href" ) );
+//			$("#scoreView .active").trigger('click');
+
+		};
+	});
+
+	scoreApp.controller('viewController', function($scope,$http) {
+        $scope.selectView = function( view ) {
+        	switch( view ) {
+        	case "Summary":
+        		alert("Summary");
+        		break;
+        	case "Details":
+        		alert("Details");
+        		break;
+        	case "Trips":
+//        		alert("Trips");
+ 				initTripsView();
+        		break;
+        	case "Logs":
+        		alert("Logs");
+        		break;
+        	case "Realtime":
+        		showVehiclesOnTrips( $("#title-route").text() );
+        		break;
+        	}
 		};
 	});
 
@@ -179,21 +230,24 @@
 			</div>
 
 			<div id="rootwizard">
-				<div class="col-sm-9 col-md-9 col-lg-9  charlie-page-container">
-					<ul id="scoreView" class="nav nav-pills navbar-right pillview">
-						<li><a data-toggle="tab" href="#tab1">Summary</a></li>
-						<li><a data-toggle="tab" href="#tab2">Details</a></li>
-						<li><a data-toggle="tab" href="#tab3">Logs</a></li>
-						<li><a data-toggle="tab" href="#tab4">Realtime</a></li>
+				<div class="col-sm-9 col-md-9 col-lg-9  charlie-page-container" ng-controller="viewController">
+					<ul id="scoreView" class="nav nav-pills navbar-right pillview"  >
+						<li><a data-toggle="tab" href="#tab1" ng-click='selectView("Summary")'>Summary</a></li>
+						<li><a data-toggle="tab" href="#tab2" ng-click='selectView("Details")'>Details</a></li>
+						<li><a data-toggle="tab" href="#tab3" ng-click='selectView("Trips")'>Trips</a></li>
+						<li><a data-toggle="tab" href="#tab4" ng-click='selectView("Logs")'>Logs</a></li>
+						<li><a data-toggle="tab" href="#tab5" ng-click='selectView("Realtime")'>Realtime</a></li>
 					</ul>
 	
-					<div id="route-title" style="font-size: 250%;"></div>
+					<div id="title-mode" style="font-size: 250%; float: left;"></div>
+					<div id="title-route" style="font-size: 250%;"></div>
 					
 					<div class="tab-content">
 						<div class="tab-pane" id="tab1"><img width="640" src="images/scorecard.jpg"></div>
 						<div class="tab-pane" id="tab2"><img width="640" src="images/detail.jpg"></div>
-						<div class="tab-pane" id="tab3"><img width="640" src="images/log.jpg"></div>
-						<div class="tab-pane" id="tab4"><img width="640" src="images/realtime.jpg"></div>
+						<div class="tab-pane" id="tab3"><div ng-include="'score_trips.html'"></div></div>
+						<div class="tab-pane" id="tab4"><img width="640" src="images/log.jpg"></div>
+						<div class="tab-pane" id="tab5"><div ng-include="'score_realtime.html'"></div></div>
 					</div>
 				</div>
 			</div>

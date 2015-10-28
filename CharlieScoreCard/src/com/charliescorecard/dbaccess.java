@@ -491,12 +491,105 @@ public class dbaccess {
 	    return jsonRoutes;	    
 	}
 	
+	public String getCurrentTrips( String routeID ) {
+    	List<pojo_x_current_trip> trips = new ArrayList<pojo_x_current_trip>();
+	    String query = null;
+		
+	    System.out.println("in getCurrentTrips()");
+
+	    try {
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+	      query = "SELECT route_id, trip_id, trip_name, shape_id, vehicle_id, vehicle_lat, vehicle_lon, vehicle_timestamp " +
+					"FROM mbta.current_location " +
+					"WHERE route_id = \"" + routeID + "\"";
+	      ps = connect.prepareStatement( query );
+	      rs=ps.executeQuery();
+	      System.out.println( query );
+          while( rs.next() ) {
+        	  trips.add( new pojo_x_current_trip( rs.getString("route_id"), rs.getString("trip_id"), rs.getString("trip_name"), rs.getString("shape_id"), rs.getString("vehicle_id"), rs.getString("vehicle_lat"), rs.getString("vehicle_lon"), rs.getString("vehicle_timestamp") ) );
+          }
+	    }catch(SQLException se) {
+	        se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	        e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.out.println("MySQL Exception in getCurrentTrips().");	
+	         }
+	    }
+
+	    ObjectWriter ow = new ObjectMapper().writer(); //.withDefaultPrettyPrinter();
+    	String jsonTrips = null;
+	    try {
+	    	jsonTrips = ow.writeValueAsString( trips );
+	    }catch(JsonProcessingException e){
+	        e.printStackTrace();
+	    }
+
+//	    jsonTrips = jsonTrips.replace(":\"", ": ");	// Remove quotes around VALUES
+//	    jsonTrips = jsonTrips.replace("\",", " ,");	// Remove quotes around VALUES
+//	    jsonTrips = jsonTrips.replace("\"}", " }");	// Remove quotes around VALUES
+	    
+	    return jsonTrips;	
+	}
+	
+/* ******************************************************************************
+ * Heatmaps
+ */
+
+	public String getHeatmapData(  ) {
+    	List<pojo_x_heat_trip> heat = new ArrayList<pojo_x_heat_trip>();
+	    String query = null;
+		
+	    System.out.println("in getHeatmapData()");
+
+	    try {
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+	      query = "SELECT day, hour, value " +
+					"FROM mbta.data";
+	      ps = connect.prepareStatement( query );
+	      rs=ps.executeQuery();
+	      System.out.println( query );
+          while( rs.next() ) {
+        	  heat.add( new pojo_x_heat_trip( rs.getString("day"), rs.getString("hour"), rs.getString("value") ) );
+          }
+	    }catch(SQLException se) {
+	        se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	        e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.out.println("MySQL Exception in getHeatmapData().");	
+	         }
+	    }
+
+	    ObjectWriter ow = new ObjectMapper().writer(); //.withDefaultPrettyPrinter();
+    	String jsonHeat = null;
+	    try {
+	    	jsonHeat = ow.writeValueAsString( heat );
+	    }catch(JsonProcessingException e){
+	        e.printStackTrace();
+	    }
+	    
+	    return jsonHeat;	
+	}
 
 	
 	
-	/* ******************************************************************************
-	 * Service thread pool
-	 */
+	
+/* ******************************************************************************
+ * Service thread pool
+ */
 	public boolean setSetting( String key, String value ) {
 	    String query = null;
 		

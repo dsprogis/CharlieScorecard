@@ -131,15 +131,31 @@ function showRouteOnMap( shape_id ) {
 					strokeWeight: 3
 					});
 
+				// Origins, anchor positions and coordinates of the marker increase in the X
+				// direction to the right and in the Y direction down.
+				var stop_image = {
+					url: 'images/stop.png',
+					// This marker is 20 pixels wide by 20 pixels high.
+					size: new google.maps.Size(20, 20),
+					// The origin for this image is (0, 0).
+					origin: new google.maps.Point(0, 0),
+					// The anchor for this image
+					anchor: new google.maps.Point(10, 10)
+				};
+			
+				// ADD THE BUS STOPS
 				if (null == resp_stops[0]){
 					alert( "There are no stops for this shape." );
 				}
 				else {
 					for ( i in resp_stops ) {
 						var coords = resp_stops[i];
-						var cityCircle = new google.maps.Marker({
+						var busStops = new google.maps.Marker({
 						    position: coords,
-						    map: map
+						    map: map,
+						    optimized: false,
+						    zIndex: 3,
+						    icon: stop_image
 						});
 					}
 				}
