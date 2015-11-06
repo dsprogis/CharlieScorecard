@@ -1,6 +1,4 @@
 
-<h3>Settings Page</h3>
-
 <div class="clearfix">
 
 	
@@ -9,7 +7,7 @@
 		<div id="settings-status" class="charlie-page-container" style="float: left;">status will go here</div>
 	</div>
 
-	<h4>Data Collection</h4>
+	<div class="col-sm-12 col-md-12 col-lg-12" style="background-color: #c8c8f0;"><h4>Data Collection</h4></div>
 
 	<div class="container">
 		<span style="float: left; padding: 8px;">Interval between data fetches (seconds):</span> 
@@ -56,6 +54,22 @@
 		</div>
 	</div>
 	
+	<div class="col-sm-12 col-md-12 col-lg-12" style="background-color: #c8c8f0;"><h4>Data Transformation</h4></div>
 	
+	<div class="container">
+		<span style="float: left; padding: 8px;">Interval between polls: transform arbitrary location data to at-stop data (seconds):</span> 
+		<div class="charlie-page-container" style="float: left;">NN Seconds</div>
+		<ul class="nav nav-pills pillview" style="float: left; padding-left: 8px;">
+			<li class="active"><a onclick="updateTranformInterval()">Transform Poll Interval</a></li>
+		</ul>
+	</div>
+		
+	<div class="container">
+		<span style="float: left; padding: 8px;">Data Transformation:</span> 
+		<ul id="transformer-on-off" class="nav nav-pills pillview" style="float: left;">
+			<li><a data-toggle="tab" onclick="transformerOn()">Running</a></li>
+			<li><a data-toggle="tab" onclick="transformerOff()">Stopped</a></li>
+		</ul>
+	</div>
 
 </div>

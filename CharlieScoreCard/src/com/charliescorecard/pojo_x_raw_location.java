@@ -1,25 +1,23 @@
 package com.charliescorecard;
 
-//TODO:  This class is very similar to pojo_x_raw_location - perhaps they can be consolidated?
+// TODO:  This class is very similar to pojo_x_current_trip - perhaps they can be consolidated?
 
-public class pojo_x_current_trip {
-	private String _route_id, _trip_id, _trip_name, _shape_id, _vehicle_id, _vehicle_lat, _vehicle_lon, _vehicle_timestamp;
+public class pojo_x_raw_location {
+	private String _route_id, _trip_id, _trip_name, _vehicle_id, _vehicle_lat, _vehicle_lon, _vehicle_timestamp;
 
-	public pojo_x_current_trip( ) {
+	public pojo_x_raw_location( ) {
 		_route_id = null;
 		_trip_id = null;
 		_trip_name = null;
-		_shape_id = null;
 		_vehicle_id = null;
 		_vehicle_lat = null;
 		_vehicle_lon = null;
 		_vehicle_timestamp = null;
 	}
-	public pojo_x_current_trip( String route_id, String trip_id, String trip_name, String shape_id, String vehicle_id, String vehicle_lat, String vehicle_lon, String vehicle_timestamp ) {
+	public pojo_x_raw_location( String route_id, String trip_id, String trip_name, String vehicle_id, String vehicle_lat, String vehicle_lon, String vehicle_timestamp ) {
 		_route_id = route_id;
 		_trip_id = trip_id;
 		_trip_name = trip_name;
-		_shape_id = shape_id;
 		_vehicle_id = vehicle_id;
 		_vehicle_lat = vehicle_lat;
 		_vehicle_lon = vehicle_lon;
@@ -34,9 +32,6 @@ public class pojo_x_current_trip {
 
     public String gettrip_name() { return _trip_name; }
     public void settrip_name(String trip_name) { _trip_name = trip_name; }
-
-    public String getshape_id() { return _shape_id; }
-    public void setshape_id(String shape_id) { _shape_id = shape_id; }
 
     public String getvehicle_id() { return _vehicle_id; }
     public void setvehicle_id(String vehicle_id) { _vehicle_id = vehicle_id; }

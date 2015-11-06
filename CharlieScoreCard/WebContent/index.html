@@ -126,14 +126,11 @@
 	});
 
 	scoreApp.controller('fetcherController', function($scope,$http) {
-		$http.get("managefetcher"+"?request-id=get-fetcher-status").success(function (response) {
-			$scope.fetchingroutes = response;
-		});
 		$scope.updateTableFetchLog = function ( ) {
-//			alert("updateFetchLogTable");
+//			alert("updateFetchLogTable #2");
 			$http.get("managefetcher"+"?request-id=get-fetcher-status").success(function (response) {
 				$scope.fetchingroutes = response;
-				$scope.tableParams.reload();
+//				$scope.tableParams.reload();
 			});
 		}
 	});

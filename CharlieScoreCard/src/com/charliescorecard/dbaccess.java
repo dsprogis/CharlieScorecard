@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class dbaccess {
     private Connection connect = null;
+	private Statement statement = null;
 	private PreparedStatement ps = null;
 	private ResultSet rs = null;
     private final String driver = "com.mysql.jdbc.Driver";
@@ -48,7 +49,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getTrackedRoutes().");	
+					System.err.println("MySQL Exception in dbaccess.getTrackedRoutes().");	
 	         }
 	    }
 		
@@ -89,7 +90,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getTrackedRoutes().");	
+					System.err.println("MySQL Exception in dbaccess.getTrackedRoutes().");	
 	         }
 	    }
 		
@@ -118,7 +119,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getTransportationModes().");	
+					System.err.println("MySQL Exception in dbaccess.getTransportationModes().");	
 	         }
 	    }
 		
@@ -165,7 +166,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getRoutesByType().");	
+					System.err.println("MySQL Exception in dbaccess.getRoutesByType().");	
 	         }
 	    }
 		
@@ -205,7 +206,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getRoutesByType().");	
+					System.err.println("MySQL Exception in dbaccess.getRoutesByType().");	
 	         }
 	    }
 		
@@ -251,7 +252,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getRoutesByType().");	
+					System.err.println("MySQL Exception in dbaccess.getRoutesByType().");	
 	         }
 	    }
 		
@@ -295,7 +296,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in getShapeBounds().");	
+					System.err.println("MySQL Exception in getShapeBounds().");	
 	         }
 	    }
 
@@ -337,7 +338,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in getRouteShape().");	
+					System.err.println("MySQL Exception in getRouteShape().");	
 	         }
 	    }
 
@@ -388,7 +389,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in getServiceStops().");	
+					System.err.println("MySQL Exception in getServiceStops().");	
 	         }
 	    }
 
@@ -441,7 +442,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in addRouteToScheduler().");	
+					System.err.println("MySQL Exception in addRouteToScheduler().");	
 					return false;
 	         }
 	    }
@@ -477,7 +478,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in dbaccess.getFetcherStatus().");	
+					System.err.println("MySQL Exception in dbaccess.getFetcherStatus().");	
 	         }
 	    }
 		
@@ -519,7 +520,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in getCurrentTrips().");	
+					System.err.println("MySQL Exception in getCurrentTrips().");	
 	         }
 	    }
 
@@ -537,6 +538,179 @@ public class dbaccess {
 	    
 	    return jsonTrips;	
 	}
+	
+/* ******************************************************************************
+ * Transformation support
+ * 
+ */
+	public List<pojo_x_raw_location> getRawLogs( int rowLimit ) {
+    	List<pojo_x_raw_location> rawLogs = new ArrayList<pojo_x_raw_location>();
+	    String query = null;
+		
+	    System.out.println("in getRawLogs()");
+
+	    try {
+	    	Class.forName( driver );
+	    	connect = DriverManager.getConnection( url, user, password );
+	    	query = "SELECT route_id, trip_id, trip_name, vehicle_id, vehicle_lat, vehicle_lon, vehicle_timestamp " +
+					"FROM mbta.raw_location " +
+					"WHERE ts_transformed IS NULL " +
+					"ORDER BY vehicle_timestamp " +
+	      			"LIMIT " + rowLimit ;
+	    	ps = connect.prepareStatement( query );
+	    	System.out.println( query );
+	    	rs=ps.executeQuery();
+	    	while( rs.next() ) {
+	    		rawLogs.add( new pojo_x_raw_location( rs.getString("route_id"), rs.getString("trip_id"), rs.getString("trip_name"), rs.getString("vehicle_id"), rs.getString("vehicle_lat"), rs.getString("vehicle_lon"), rs.getString("vehicle_timestamp") ) );
+	    	}
+	    }catch(SQLException se) {
+	    	se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	    	e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	    	try {
+	    		if (connect != null) {
+	    			connect.close();
+	    		}
+	    	} catch (Exception e) {
+					System.err.println("MySQL Exception in getRawLogs().");	
+	    	}
+	    }
+	    return rawLogs;	
+	}
+	
+	public void markRawLogs( List<pojo_x_raw_location> rawLogs ) {
+		String query = null;
+		
+	    System.out.println("in markRawLogs()");
+
+	    if( 0 == rawLogs.size() ) {
+	    	System.out.println("__ __ __ markRawLogs(): Nothing to update");
+	    	return;
+	    }
+	    
+		String sConditional = "";
+		pojo_x_raw_location curLog = null;
+	    for(int i=0; i<rawLogs.size(); i++) {
+	    	curLog = rawLogs.get(i);
+	    	sConditional += "(\"" + curLog.gettrip_id() + "\",\"" + curLog.getvehicle_timestamp() + "\")";
+	    	if(i+1<rawLogs.size()) {
+	    		sConditional += ",";
+	    	}
+	    }
+	    
+	    try {
+	    	Class.forName( driver );
+	    	connect = DriverManager.getConnection( url, user, password );
+	    	query = "UPDATE mbta.raw_location SET ts_transformed=now() " +
+					"WHERE (trip_id, vehicle_timestamp) IN (" + sConditional + ")";
+
+	    	statement = connect.createStatement( );
+	    	System.out.println( query );
+	    	statement.executeUpdate( query );  //executeUpdate
+	    	
+	    }catch(SQLException se) {
+	    	se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	    	e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	    	try {
+	    		if (connect != null) {
+	    			connect.close();
+	    		}
+	    	} catch (Exception e) {
+					System.err.println("MySQL Exception in markRawLogs().");	
+	    	}
+	    }
+	    return;	
+	}
+	
+	
+	
+	public List<pojo_x_trip_stops> GetTripStops( String trip_id ) {
+    	List<pojo_x_trip_stops> stops = new ArrayList<pojo_x_trip_stops>();
+	    String query = null;
+		
+//	    System.out.println("in GetTripStops()");
+
+	    try {
+	    	Class.forName( driver );
+	    	connect = DriverManager.getConnection( url, user, password );
+	    	query = "SELECT times.trip_id, times.arrival_time, times.departure_time, times.stop_id, times.stop_sequence, stops.stop_lat, stops.stop_lon " +
+				"FROM mbta.t_stop_times times " +
+				"INNER JOIN mbta.t_stops stops " +
+				"ON times.stop_id = stops.stop_id " +
+				"WHERE trip_id = " + trip_id + " " +
+				"ORDER BY cast(stop_sequence as signed)";
+	    	ps = connect.prepareStatement( query );
+//	    	System.out.println( query );
+	    	rs=ps.executeQuery();
+	    	while( rs.next() ) {
+	    		stops.add( new pojo_x_trip_stops( rs.getString("trip_id"), rs.getString("arrival_time"), rs.getString("departure_time"), rs.getString("stop_id"), rs.getString("stop_sequence"), rs.getString("stop_lat"), rs.getString("stop_lon") ) );
+	    	}
+	    }catch(SQLException se) {
+	    	se.printStackTrace();	        //Handle errors for JDBC
+	    }catch(Exception e) {
+	    	e.printStackTrace();	        //Handle errors for Class.forName
+	    } finally {
+	    	try {
+	    		if (connect != null) {
+	    			connect.close();
+	    		}
+	    	} catch (Exception e) {
+					System.err.println("MySQL Exception in GetTripStops().");	
+	    	}
+	    }
+	    return stops;			
+	}
+	
+	public boolean InsertTransformedRoute( pojo_x_transformed_location tl ) {
+	    String query = null;
+		
+//	    System.out.println("in InsertTransformedRoute()");
+
+	    try {
+	      Class.forName( driver );
+	      Class.forName( driver );
+	      connect = DriverManager.getConnection( url, user, password );
+	      query = "INSERT INTO transformed_location (route_id, trip_id, trip_name, stop_id, stop_sequence, vehicle_id, actual_timestamp, scheduled_timestamp, time_diff) " +
+	    		  "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )";
+//	      System.out.println( query );
+	      ps = connect.prepareStatement( query );
+	      ps.setString(1,  tl.getroute_id() );
+	      ps.setString(2,  tl.gettrip_id() );
+	      ps.setString(3,  tl.gettrip_name() );
+	      ps.setString(4,  tl.getstop_id() );
+	      ps.setString(5,  tl.getstop_sequence() );
+	      ps.setString(6,  tl.getvehicle_id() );
+	      ps.setString(7,  tl.getactual_timestamp() );
+	      ps.setString(8,  tl.getscheduled_timestamp() );
+	      ps.setString(9,  tl.gettime_diff() );
+	      ps.executeUpdate();
+	      
+	    }catch(SQLException se) {
+			System.err.println("__ __ __ MySQL Exception in InsertTransformedRoute().");	
+			System.out.println("__ __ __ trip_id=" + tl.gettrip_id() + ", stop_sequence=" + tl.getstop_sequence() + ", actual_timestamp=" + tl.getactual_timestamp() + ", scheduled_timestamp=" + tl.getscheduled_timestamp() );
+	        se.printStackTrace();
+	        return false;
+	    }catch(Exception e) {
+			System.err.println("MySQL Exception in InsertTransformedRoute().");	
+			System.out.println("__ __ __ trip_id=" + tl.gettrip_id() + ", stop_sequence=" + tl.getstop_sequence() + ", actual_timestamp=" + tl.getactual_timestamp() + ", scheduled_timestamp=" + tl.getscheduled_timestamp() );
+	        e.printStackTrace();
+	        return false;
+	    } finally {
+	      try {
+	          if (connect != null) {
+	             connect.close();
+	           }
+	         } catch (Exception e) {
+					System.err.println("MySQL Exception in InsertTransformedRoute().");	
+					return false;
+	         }
+	    }
+	    return true;
+	}
+
 	
 /* ******************************************************************************
  * Heatmaps
@@ -569,7 +743,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in getHeatmapData().");	
+					System.err.println("MySQL Exception in getHeatmapData().");	
 	         }
 	    }
 
@@ -617,7 +791,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in setSetting().");	
+					System.err.println("MySQL Exception in setSetting().");	
 					return false;
 	         }
 	    }
@@ -653,7 +827,7 @@ public class dbaccess {
 	             connect.close();
 	           }
 	         } catch (Exception e) {
-					System.out.println("MySQL Exception in setSetting().");	
+					System.err.println("MySQL Exception in setSetting().");	
 					return null;
 	         }
 	    }

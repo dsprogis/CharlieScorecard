@@ -13,6 +13,8 @@ import org.json.JSONObject;
 
 /**
  * Servlet implementation class managefetcher
+ * 
+ * TODO:  Change service name to "managetasks" because this class manages more than just fetcher
  */
 @WebServlet("/managefetcher")
 public class managefetcher extends HttpServlet {
@@ -20,6 +22,7 @@ public class managefetcher extends HttpServlet {
 //	private static final String CONTENT_TYPE = "text/html; charset=windows-1252";
 	private static final String CONTENT_TYPE = "application/json;charset=UTF-8";
 	private Thread fetch_manager = null;
+	private Thread transformer = null;
 
 	/**
      * @see HttpServlet#HttpServlet()
@@ -76,7 +79,7 @@ public class managefetcher extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-//		System.out.println("In managefetcher:doPost.");
+		System.out.println("In managefetcher:doPost.");
 
 	    try {
 	    	String requestID = request.getParameter("request-id");
@@ -107,13 +110,13 @@ public class managefetcher extends HttpServlet {
 				System.out.println("case: managefetcher - manager-stop");
 				// TODO : to really see whether fetch manager is running - check thread alive
 				
-				// Stop the fetchers (no harm in stopping even if already stopped
+				// Stop the thread (no harm in stopping even if already stopped)
 				new dbaccess().setSetting( "fetchers", "stopped" );				
 				
 				if ( null != fetch_manager ) {
 					fetch_manager.interrupt();
 					fetch_manager = null;
-//					System.out.println("Fetch Manager interupted");
+//					System.out.println("Fetch Manager interrupted");
 				} else {
 //					System.out.println("Fetch Manager is null and assumed not alive");
 				}
@@ -126,6 +129,49 @@ public class managefetcher extends HttpServlet {
 					jsonResponse.put("manager-state", "dead" );					
 				} else {
 					jsonResponse.put("manager-state", "alive" );
+				}
+				out.print(jsonResponse.toString());
+				break;
+				
+		    case "transformer-start":
+				System.out.println("case: managefetcher - transformer-start");
+				// TODO : check XXXXXXXXXXX still alive - when was last time thread pinged DB? 
+
+				new dbaccess().setSetting( "transformer", "running" );
+
+				if ( null == transformer ) {				// If thread exists, don't start again.
+					transformer = new TransformManager();
+					transformer.start();
+					System.out.println("Transformer launched");
+				} else {
+					// TODO : This may or may not be the case - when did it last ping?
+					System.out.println("Transformer not null and assumed running");
+				}
+				break;
+
+		    case "transformer-stop":
+				System.out.println("case: managefetcher - transformer-stop");
+				// TODO : to really see whether XXXXXXXXX manager is running - check thread alive
+				
+				// Stop the thread (no harm in stopping even if already stopped)
+				new dbaccess().setSetting( "transformer", "stopped" );				
+				
+				if ( null != transformer ) {
+					transformer.interrupt();
+					transformer = null;
+					System.out.println("Transformer interrupted");
+				} else {
+					System.out.println("Transformer is null and assumed not alive");
+				}
+				break;
+
+		    case "get-transformer-state":
+				System.out.println("case: managefetcher - get-transformer-state");
+				
+				if( null == transformer ) {
+					jsonResponse.put("transformer-state", "dead" );					
+				} else {
+					jsonResponse.put("transformer-state", "alive" );
 				}
 				out.print(jsonResponse.toString());
 				break;
