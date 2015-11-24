@@ -272,7 +272,7 @@ public class dbaccess {
     	List<pojo_coordinate> minmax = new ArrayList<pojo_coordinate>();
 	    String query = null;
 		
-	    System.out.println("in getShapeBounds( )");
+//	    System.out.println("in getShapeBounds( )");
 
 	    try {
 	      Class.forName( driver );
@@ -315,7 +315,7 @@ public class dbaccess {
     	List<pojo_coordinate> minmax = new ArrayList<pojo_coordinate>();
 	    String query = null;
 		
-	    System.out.println("in getRouteShape()");
+//	    System.out.println("in getRouteShape()");
 
 	    try {
 	      Class.forName( driver );
@@ -362,7 +362,7 @@ public class dbaccess {
     	List<pojo_coordinate> minmax = new ArrayList<pojo_coordinate>();
 	    String query = null;
 		
-	    System.out.println("in getServiceStops()");
+//	    System.out.println("in getServiceStops()");
 
 	    try {
 	      Class.forName( driver );
@@ -375,7 +375,7 @@ public class dbaccess {
 					"ORDER BY cast(shape.stop_sequence as signed)";
 	      ps = connect.prepareStatement( query );
 	      rs=ps.executeQuery();
-	      System.out.println( query );
+//	      System.out.println( query );
           while( rs.next() ) {
         	  minmax.add( new pojo_coordinate( rs.getString("stop_lat"), rs.getString("stop_lon") ) );
           }
@@ -418,7 +418,7 @@ public class dbaccess {
 	public boolean addRouteToScheduler( String modeID, String routeID ) {
 	    String query = null;
 		
-	    System.out.println("in addRouteToScheduler()");
+//	    System.out.println("in addRouteToScheduler()");
 
 	    try {
 	      Class.forName( driver );
@@ -428,7 +428,7 @@ public class dbaccess {
 	    		  "VALUES ( (SELECT route_mode from x_route_mode WHERE route_type = \"" + modeID + "\"), \"" + routeID + "\" )";
 	      st.executeUpdate( query );
 	      
-	      System.out.println( query );
+//	      System.out.println( query );
 
 	    }catch(SQLException se) {
 	        se.printStackTrace();
@@ -496,7 +496,7 @@ public class dbaccess {
     	List<pojo_x_current_trip> trips = new ArrayList<pojo_x_current_trip>();
 	    String query = null;
 		
-	    System.out.println("in getCurrentTrips()");
+//	    System.out.println("in getCurrentTrips()");
 
 	    try {
 	      Class.forName( driver );
@@ -506,7 +506,7 @@ public class dbaccess {
 					"WHERE route_id = \"" + routeID + "\"";
 	      ps = connect.prepareStatement( query );
 	      rs=ps.executeQuery();
-	      System.out.println( query );
+//	      System.out.println( query );
           while( rs.next() ) {
         	  trips.add( new pojo_x_current_trip( rs.getString("route_id"), rs.getString("trip_id"), rs.getString("trip_name"), rs.getString("shape_id"), rs.getString("vehicle_id"), rs.getString("vehicle_lat"), rs.getString("vehicle_lon"), rs.getString("vehicle_timestamp") ) );
           }
@@ -547,18 +547,20 @@ public class dbaccess {
     	List<pojo_x_raw_location> rawLogs = new ArrayList<pojo_x_raw_location>();
 	    String query = null;
 		
-	    System.out.println("in getRawLogs()");
+//	    System.out.println("in getRawLogs()");
 
 	    try {
 	    	Class.forName( driver );
 	    	connect = DriverManager.getConnection( url, user, password );
 	    	query = "SELECT route_id, trip_id, trip_name, vehicle_id, vehicle_lat, vehicle_lon, vehicle_timestamp " +
 					"FROM mbta.raw_location " +
-					"WHERE ts_transformed IS NULL " +
+//					"WHERE ts_transformed IS NULL " +
+					"WHERE ts_transformed IS NULL AND vehicle_timestamp > 1445234400 AND vehicle_timestamp < 1445320800 " +							// Just study one day
+//					"WHERE ts_transformed IS NULL AND vehicle_timestamp > 1445234400 AND vehicle_timestamp < 1445320800 AND trip_id=28346850 " +	// This trip tests date boundry & timezone error 
 					"ORDER BY vehicle_timestamp " +
 	      			"LIMIT " + rowLimit ;
 	    	ps = connect.prepareStatement( query );
-	    	System.out.println( query );
+//	    	System.out.println( query );
 	    	rs=ps.executeQuery();
 	    	while( rs.next() ) {
 	    		rawLogs.add( new pojo_x_raw_location( rs.getString("route_id"), rs.getString("trip_id"), rs.getString("trip_name"), rs.getString("vehicle_id"), rs.getString("vehicle_lat"), rs.getString("vehicle_lon"), rs.getString("vehicle_timestamp") ) );
@@ -582,10 +584,10 @@ public class dbaccess {
 	public void markRawLogs( List<pojo_x_raw_location> rawLogs ) {
 		String query = null;
 		
-	    System.out.println("in markRawLogs()");
+//	    System.out.println("in markRawLogs()");
 
 	    if( 0 == rawLogs.size() ) {
-	    	System.out.println("__ __ __ markRawLogs(): Nothing to update");
+//	    	System.out.println("__ __ __ markRawLogs(): Nothing to update");
 	    	return;
 	    }
 	    
@@ -606,7 +608,7 @@ public class dbaccess {
 					"WHERE (trip_id, vehicle_timestamp) IN (" + sConditional + ")";
 
 	    	statement = connect.createStatement( );
-	    	System.out.println( query );
+//	    	System.out.println( query );
 	    	statement.executeUpdate( query );  //executeUpdate
 	    	
 	    }catch(SQLException se) {
@@ -673,29 +675,32 @@ public class dbaccess {
 	      Class.forName( driver );
 	      Class.forName( driver );
 	      connect = DriverManager.getConnection( url, user, password );
-	      query = "INSERT INTO transformed_location (route_id, trip_id, trip_name, stop_id, stop_sequence, vehicle_id, actual_timestamp, scheduled_timestamp, time_diff) " +
-	    		  "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )";
+	      query = "INSERT INTO transformed_location (route_id, trip_id, trip_name, direction_id, stop_id, stop_sequence, vehicle_id, stop_lat, stop_lon, actual_timestamp, scheduled_timestamp, time_diff) " +
+	    		  "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )";
 //	      System.out.println( query );
 	      ps = connect.prepareStatement( query );
 	      ps.setString(1,  tl.getroute_id() );
 	      ps.setString(2,  tl.gettrip_id() );
 	      ps.setString(3,  tl.gettrip_name() );
-	      ps.setString(4,  tl.getstop_id() );
-	      ps.setString(5,  tl.getstop_sequence() );
-	      ps.setString(6,  tl.getvehicle_id() );
-	      ps.setString(7,  tl.getactual_timestamp() );
-	      ps.setString(8,  tl.getscheduled_timestamp() );
-	      ps.setString(9,  tl.gettime_diff() );
+	      ps.setString(4,  tl.getdirection_id() );
+	      ps.setString(5,  tl.getstop_id() );
+	      ps.setString(6,  tl.getstop_sequence() );
+	      ps.setString(7,  tl.getvehicle_id() );
+	      ps.setString(8,  tl.getstop_lat() );
+	      ps.setString(9,  tl.getstop_lon() );
+	      ps.setString(10,  tl.getactual_timestamp() );
+	      ps.setString(11,  tl.getscheduled_timestamp() );
+	      ps.setString(12,  tl.gettime_diff() );
 	      ps.executeUpdate();
 	      
 	    }catch(SQLException se) {
 			System.err.println("__ __ __ MySQL Exception in InsertTransformedRoute().");	
-			System.out.println("__ __ __ trip_id=" + tl.gettrip_id() + ", stop_sequence=" + tl.getstop_sequence() + ", actual_timestamp=" + tl.getactual_timestamp() + ", scheduled_timestamp=" + tl.getscheduled_timestamp() );
+//			System.out.println("__ __ __ trip_id=" + tl.gettrip_id() + ", stop_sequence=" + tl.getstop_sequence() + ", actual_timestamp=" + tl.getactual_timestamp() + ", scheduled_timestamp=" + tl.getscheduled_timestamp() );
 	        se.printStackTrace();
 	        return false;
 	    }catch(Exception e) {
 			System.err.println("MySQL Exception in InsertTransformedRoute().");	
-			System.out.println("__ __ __ trip_id=" + tl.gettrip_id() + ", stop_sequence=" + tl.getstop_sequence() + ", actual_timestamp=" + tl.getactual_timestamp() + ", scheduled_timestamp=" + tl.getscheduled_timestamp() );
+//			System.out.println("__ __ __ trip_id=" + tl.gettrip_id() + ", stop_sequence=" + tl.getstop_sequence() + ", actual_timestamp=" + tl.getactual_timestamp() + ", scheduled_timestamp=" + tl.getscheduled_timestamp() );
 	        e.printStackTrace();
 	        return false;
 	    } finally {
@@ -712,6 +717,38 @@ public class dbaccess {
 	}
 
 	
+	public String GetTripDirection( String trip_id ) {
+	    String query = null;
+	    String result = null;
+//		System.out.println("in GetTripDirection()");
+
+		try {
+			Class.forName( driver );
+			connect = DriverManager.getConnection( url, user, password );
+			query = "SELECT direction_id " +
+					"FROM mbta.t_trips " +
+					"WHERE trip_id = \"" + trip_id + "\"";
+			ps = connect.prepareStatement( query );
+			rs=ps.executeQuery();
+			if( rs.next() ) {
+				result = rs.getString("direction_id");
+			}
+		}catch(SQLException se) {
+			se.printStackTrace();	        //Handle errors for JDBC
+		}catch(Exception e) {
+			e.printStackTrace();	        //Handle errors for Class.forName
+		} finally {
+			try {
+				if (connect != null) {
+					connect.close();
+				}
+			} catch (Exception e) {
+				System.err.println("MySQL Exception in GetTripDirection().");	
+			}
+		}
+		return result;	
+	}
+	
 /* ******************************************************************************
  * Heatmaps
  */
@@ -720,7 +757,7 @@ public class dbaccess {
     	List<pojo_x_heat_trip> heat = new ArrayList<pojo_x_heat_trip>();
 	    String query = null;
 		
-	    System.out.println("in getHeatmapData()");
+//	    System.out.println("in getHeatmapData()");
 
 	    try {
 	      Class.forName( driver );
@@ -729,7 +766,7 @@ public class dbaccess {
 					"FROM mbta.data";
 	      ps = connect.prepareStatement( query );
 	      rs=ps.executeQuery();
-	      System.out.println( query );
+//	      System.out.println( query );
           while( rs.next() ) {
         	  heat.add( new pojo_x_heat_trip( rs.getString("day"), rs.getString("hour"), rs.getString("value") ) );
           }

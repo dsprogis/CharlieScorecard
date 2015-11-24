@@ -32,9 +32,9 @@ public class TransformManager extends Thread {
 	   				curLog = rawLogs.get(i);
 		   			System.out.println( "__Row = " + i + ", routeID = " + curLog.getroute_id() + ", trip_id = " + curLog.gettrip_id() );
 	   			
-		   			currentTranformer = findTransformer( curLog.gettrip_id() );
+		   			currentTranformer = findTransformer( curLog.gettrip_id(), curLog.getvehicle_timestamp() );
 		   			if( null == currentTranformer ) {  				// If row is part of new trip then add new Transformer and update.
-		   				currentTranformer = new Transformer( curLog.getroute_id(), curLog.gettrip_id(), curLog.gettrip_name() );
+		   				currentTranformer = new Transformer( curLog.getroute_id(), curLog.gettrip_id(), curLog.gettrip_name(), curLog.getvehicle_timestamp() );
 		   				// UPDATE for now but may want to call a different method to confirm decide where we are in trip
 		   				// ... might want to ignore partial trips because we start logging in the middle
 		   				currentTranformer.update( curLog );
@@ -79,12 +79,12 @@ public class TransformManager extends Thread {
 
     }
 
-    private Transformer findTransformer( String trip_id ) {
+    private Transformer findTransformer( String trip_id, String timestamp ) {
     	Transformer current;
     	if( null!=activeTransformers ) {
     		for( int i=0; i<activeTransformers.size(); i++) {
     			current = activeTransformers.get(i);
-    			if ( trip_id.equals(current.gettrip_id() ) ) {
+    			if ( trip_id.equals(current.gettrip_id()) && current.isSameDate(timestamp) ) {
     				return current;
     			}
     		}

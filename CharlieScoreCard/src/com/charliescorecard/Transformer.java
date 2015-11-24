@@ -3,6 +3,7 @@ package com.charliescorecard;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 /* ************************************************************************************
  * Transformer class is loaded with scheduled trip stops (time & location) from DB based on trip_id
@@ -10,42 +11,62 @@ import java.util.List;
  * 
  */
 public class Transformer {
-	private static double distance_allowance = 0.001;		// 0.001 is about 120 yards
+	private static double distance_allowance = 0.003;		// 0.001 is about 120 yards
+	private static long operational_offset = 7200;			// two hours in seconds = 2 * 60 * 60
 	private String _route_id = null;
 	private String _trip_id = null;
 	private String _trip_name = null;
+	private String _direction_id = null;
+	private long _tz_offset;
+	private long _trip_date;
 	private List<pojo_x_trip_stops> _stops = null;
 	private dbaccess dba = new dbaccess();
 	private Ping _secondlastPing = null;					// for estimating final stop
 	private Ping _lastPing = null;
 	private int _CompleteCheck = 0;
 
-	public Transformer( String route_id, String trip_id, String trip_name  ) {
+	public Transformer( String route_id, String trip_id, String trip_name, String timestamp ) {
 		_route_id = route_id;
 		_trip_id = trip_id;
 		_trip_name = trip_name;
+		_tz_offset = timezone("America/New_York", Long.parseLong(timestamp) );		// Adjust for timezone (and DST)
+		_trip_date = EpochMidnight( Long.parseLong(timestamp) );
 		_stops = dba.GetTripStops( trip_id );
+		_direction_id = dba.GetTripDirection( trip_id );
 	}
 	
 	public String gettrip_id( ) {
 		return _trip_id;
 	}
 	
+	public boolean isSameDate( String timestamp ) {
+//		long ts = Long.parseLong(timestamp);
+//		if ( _trip_date < ts && ts < (_trip_date + twentysixhours) ) {
+//			return true;
+//		}
+//		return false;
+
+//		return ( _trip_date == EpochMidnight( Long.parseLong(timestamp) ) );
+
+		return ( _trip_date == EpochMidnight( Long.parseLong(timestamp) + _tz_offset - operational_offset ) );	// operations can run past midnight
+
+	}
+	
 	public boolean isComplete() {
 		_CompleteCheck += 1;
 		if( _CompleteCheck < 5 ) {			// If the counter hasn't expired then don't give up
-	    	System.out.println( "__ __ __ isComplete: _trip_id=" + _trip_id + ", _CompleteCheck=" + _CompleteCheck );
+//	    	System.out.println( "__ __ __ isComplete: _trip_id=" + _trip_id + ", _CompleteCheck=" + _CompleteCheck );
 			return false;			
 		}
 
 		if( null == _secondlastPing || null == _lastPing ) {
-	    	System.out.println( "__ __ __ isComplete: counter has expired but there is insufficient history to estimate a final stop - just end it" );
+//	    	System.out.println( "__ __ __ isComplete: counter has expired but there is insufficient history to estimate a final stop - just end it" );
 			return true;
 		}
 											// If the vehicle did not move over the last two pings then we can't estimate the last stop time
 		if( _lastPing._locVehicle.getLat() == _secondlastPing._locVehicle.getLat()
 				&& _lastPing._locVehicle.getLng() == _secondlastPing._locVehicle.getLng() ) {
-	    	System.err.println( "__ __ __ isComplete: vehicle has not moved (this code should never have been reached!!!" );
+	    	System.err.println( "__ __ __ isComplete: vehicle has not moved (this code should never have been reached!!!)" );
 			return true;
 		}
 		
@@ -72,30 +93,32 @@ public class Transformer {
 		for( int i=0; i< numberSegments; i++) {		// The array and counter are 0-based whereas stop_sequence is 1-based
 			curPing = between( i+1, _stops.get(i), _stops.get(i+1), curLog );
 			if( null != curPing ) {
-	        	System.out.println( "__ __ Trip: " + _trip_id + ", segment hit between stops " + _stops.get(i).getstop_sequence() + " and " + _stops.get(i+1).getstop_sequence() );
+//	        	System.out.println( "__ __ Trip: " + _trip_id + ", segment hit between stops " + _stops.get(i).getstop_sequence() + " and " + _stops.get(i+1).getstop_sequence() );
 				pings.add( curPing );
 			}
 		}
 
 		switch ( pings.size() ) {
 		case 0:
-        	System.out.println( "__ __ Trip: " + _trip_id + ", no hits.  Consider increasing the distance_allowance fudge-factor" );
+        	System.out.println( "__ __ Trip: " + _trip_id + ", Ping coordinates: " + curLog.getvehicle_lat() + " " + curLog.getvehicle_lon() + " appears off the route");
+        	System.out.println( "__ __ Trip: Maybe it is erroneous but consider increasing the distance_allowance fudge-factor" );
+        	// TODO - archive curLog into GPS error table
 			return;
 			
 		case 1:
-        	System.out.println( "__ __ Trip: " + _trip_id + ", one hit." );
+//        	System.out.println( "__ __ Trip: " + _trip_id + ", one hit." );
         	curPing = pings.get(0);		// reuse curPing to carry ping data
 			break;
 			
 		default:
-        	System.out.println( "__ __ Trip: " + _trip_id + ", more than one hit - finding the best fit (shortest)." );
+//        	System.out.println( "__ __ Trip: " + _trip_id + ", more than one hit - finding the best fit (shortest)." );
         	// If more than one segment, find the best fit which should have the shortest legs
         	if( pings.size() > 3) {
             	System.out.println( "__ __ Trip: " + _trip_id + ", " + pings.size() + " hits.  Consider reducing the distance_allowance fudge-factor" );
         	}
         	int indexShortest = 0;
     		for( int i=1; i < pings.size(); i++) {
-    			if( pings.get(i)._distLastNext < pings.get(indexShortest)._distLastNext ) {
+    			if( pings.get(i)._length_variance < pings.get(indexShortest)._length_variance ) {
     				indexShortest = i;
     			}
     		}
@@ -111,7 +134,7 @@ public class Transformer {
 				_lastPing = curPing;
 			} else {
 				// ElseIf the vehicle is not in the first segment, ignore this ping because it adds no value and will corrupt distance calculations
-	        	System.out.println( "__ __ Trip: " + _trip_id + "vehicle has not moved - ignoring ping event" );
+//	        	System.out.println( "__ __ Trip: " + _trip_id + "vehicle has not moved - ignoring ping event" );
 			}
         	return;
 		}
@@ -165,15 +188,21 @@ public class Transformer {
 			actualStopTime = curPing._vehicle_timestamp + timeCurToTargetStop;
 		}
 		// Convert format of scheduled time to epoch time
-		long midnight = EpochMidnight( curPing._vehicle_timestamp );	// Use Ping day as basis for epoch time
-		long time = TimeInSeconds(targetStop.getarrival_time());			// Add the scheduled time
-		long offset = timezone("EST", curPing._vehicle_timestamp);		// Adjust for timezone (and DST)
-		long scheduledArrivalTime = midnight + time + offset;
+		long time = TimeInSeconds(targetStop.getarrival_time());					// Add the scheduled time
+		long scheduledArrivalTime = _trip_date + time - _tz_offset;					// Adjust by _tz_offset b/c we want to store in GMT
 		
-    	System.out.println( "__ __ __ distCurToTargetStop=" + distCurToTargetStop + ", pace=" + pace + ", timeCurToTargetStop=" + timeCurToTargetStop );
-    	System.out.println( "__ __ __ stoptime: actual=" + actualStopTime + ", scheduled=" + scheduledArrivalTime + ", diff=" + (actualStopTime-scheduledArrivalTime) );
+//    	System.out.println( "__ __ __ distCurToTargetStop=" + distCurToTargetStop + ", pace=" + pace + ", timeCurToTargetStop=" + timeCurToTargetStop );
+//    	System.out.println( "__ __ __ stoptime: actual=" + actualStopTime + ", scheduled=" + scheduledArrivalTime + ", diff=" + (actualStopTime-scheduledArrivalTime) );
 		
-		pojo_x_transformed_location vehicleAtStop = new pojo_x_transformed_location( _route_id, _trip_id,  _trip_name,  targetStop.getstop_id(), targetStop.getstop_sequence(), curPing._vehicle_id, Long.toString(actualStopTime), Long.toString(scheduledArrivalTime), Long.toString(scheduledArrivalTime-actualStopTime) );
+		pojo_x_transformed_location vehicleAtStop = new pojo_x_transformed_location( _route_id, _trip_id,  _trip_name, _direction_id,
+				targetStop.getstop_id(),
+				targetStop.getstop_sequence(), 
+				curPing._vehicle_id, 
+				targetStop.getstop_lat(), 
+				targetStop.getstop_lon(), 
+				Long.toString(actualStopTime), 
+				Long.toString(scheduledArrivalTime), 
+				Long.toString(scheduledArrivalTime-actualStopTime) );
 		return dba.InsertTransformedRoute( vehicleAtStop );
 	}
 	
@@ -188,10 +217,11 @@ public class Transformer {
 		double distLast = distance(last, cur);
 		double distNext = distance(cur, next);
 		double segment_length = distance(last, next);
+		double length_variance = (distLast+distNext) - segment_length;		// If bus going in straight line and GPS 100% accurate, length_variance should be 0
 		
 		// The two legs, distance to lastStop and distance to nextStop, shouldn't be much more than the distance between stops ...
 		if ( (distLast + distNext ) <= (segment_length + distance_allowance)  ) {
-			return new Ping( segmentNum, cur, distLast, distNext, curLog.getvehicle_id(), curLog.getvehicle_timestamp() );
+			return new Ping( segmentNum, cur, distLast, distNext, length_variance, curLog.getvehicle_id(), curLog.getvehicle_timestamp() );
 		}
 		return null;
 	}
@@ -205,11 +235,14 @@ public class Transformer {
 		return Math.sqrt(lat+lng);
 	}
 
+	// Return the date at midnight by subtracting seconds since midnight
 	private long EpochMidnight( long epochDate ) {
 		long remainder = epochDate % 86400;			// Get the number of seconds since start of day by modulus seconds-in-day
 		return epochDate - remainder;				// Return the date stripped of the modulus part of the day
 	}
 	
+	// MBTA schedules are offered in a string formated HH:MM:SS while vehicle time is offered in epoch
+	// This function returns the epoch seconds since midnight
 	private long TimeInSeconds( String sTime ) {
 		String delim = "[:]";
 		String[] token = sTime.split(delim);
@@ -219,41 +252,27 @@ public class Transformer {
 		return (hours * 3600) + (minutes * 60) + seconds;
 	}
 	
+	// Return the offset in seconds from GMT time, adjust for daylight savings
 	private long timezone(String zone, long epochDate) {
-		long adjustment = 0;	// -(Calendar.get(Calendar.ZONE_OFFSET) + Calendar.get(Calendar.DST_OFFSET)) / 1000;
-//		TimeZone tz = TimeZone.getTimeZone(zone);
-		Date d = new Date(epochDate*1000);
-//		boolean inDS = tz.inDaylightTime( d );
-
- 		switch (zone) {
-		case "EST":
-//			if( inDS ) 		// if summer savings
-				adjustment = 4*3600;		// EDT
-//			else
-//				adjustment = 5*3600;		// EST	
-			break;
-		default:
-	    	System.err.println( "Time conversion error in timezone() adjustment." );
-			break;
-		}
-
-		return adjustment;
+		TimeZone tz = TimeZone.getTimeZone(zone);
+		long offset = tz.getOffset(epochDate*1000);
+		return offset / 1000;
 	}
 	
 	private class Ping {
 		pojo_coordinate _locVehicle = null;	// Keep a copy of the vehicle's reported location
 		double _distLast = 0.0;				// distance of leg from-stop to current bus location (ping location)
 		double _distNext = 0.0;				// distance of leg current bus location to to-stop
-		double _distLastNext = 0.0;			// the combined distances of distLast and distNext
+		double _length_variance;				// this is how much longer the two legs are over the straight segment from stop to stop
 		int _segmentNum = -1;				// the segment that the ping is in
 		String _vehicle_id = null;				// UID of vehicle
 		long _vehicle_timestamp = 0;		// epoc timestamp of bus at reported location
-		Ping( int segmentNum, pojo_coordinate locVehicle, double distLast, double distNext, String vehicle_id, String vehicle_timestamp ) {
+		Ping( int segmentNum, pojo_coordinate locVehicle, double distLast, double distNext, double length_variance, String vehicle_id, String vehicle_timestamp ) {
 			_segmentNum = segmentNum;
 			_locVehicle = locVehicle;
 			_distLast = distLast;
 			_distNext = distNext;
-			_distLastNext = distLast + distNext;
+			_length_variance = length_variance;
 			_vehicle_id = vehicle_id;
 			_vehicle_timestamp = Long.parseLong( vehicle_timestamp );  // TODO: error checking in case not number
 		}
